@@ -55,3 +55,6 @@ body.authenticated .auth-screen{display:none!important}
 .tp-assignment-list .v7-flex{gap:14px;align-items:center}
 .tp-assignment-list .meta{margin-top:4px}
 @media(max-width:580px){.tp-assignment-list .v7-flex{align-items:flex-start;flex-direction:column}}
+
+/* 0.9.2 — confirmation of imported historical stock */
+.tp-checkline{display:flex;gap:10px;align-items:flex-start;line-height:1.45}.tp-checkline input[type=checkbox]{flex:0 0 auto;width:18px;height:18px;margin:2px 0 0}.tp-checkline span{min-width:0}

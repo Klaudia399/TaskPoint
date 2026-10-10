@@ -1,4 +1,4 @@
-# TaskPoint BETA 0.9.1 — aktualizacja pilotażowa
+# TaskPoint BETA 0.9.2 — aktualizacja pilotażowa
 
 **Ta wersja to pilotaż do testów. Nie jest certyfikowanym ani audytowanym produkcyjnym systemem zamówień.**
 
@@ -31,7 +31,7 @@
 ## Aktualizacja na MacBooku
 
 1. **Zrób eksport JSON** z bieżącej TaskPoint 0.8 (Ustawienia i eksport), jako kopię bezpieczeństwa dostępną ręcznie. Nie kasuj danych Firestore ani repozytorium.
-2. Firebase Console → Firestore Database → Rules. Wklej **całość** pliku `FIRESTORE-RULES-0.9.1.txt`, kliknij Publish. **Nie pozostawiaj reguł domyślnie otwartych.** Jeśli pojawi się błąd, wstrzymaj aktualizację.
+2. Firebase Console → Firestore Database → Rules. Wklej **całość** pliku `FIRESTORE-RULES-0.9.2.txt`, kliknij Publish. **Nie pozostawiaj reguł domyślnie otwartych.** Jeśli pojawi się błąd, wstrzymaj aktualizację.
 3. GitHub: istniejące repozytorium `Klaudia399/TaskPoint` → `Add file` → `Upload files` → wgraj z tej paczki **index.html, auth.js, workspace.js, styles.css, sw.js, manifest.webmanifest, icon-192.png, icon-512.png**. Zastąp odpowiadające im pliki, kliknij `Commit changes`.
 4. Sprawdź stronę `https://klaudia399.github.io/TaskPoint/` najpierw w incognito. W zwykłej przeglądarce PWA może potrzebować odświeżenia pamięci Service Worker. Pliku reguł Firebase nie wgrywaj na GitHub.
 5. **Test danych:** na budowie testowej dodaj materiały, ustaw ręczny stan częściowy (np. 7/10 szt.), sprawdź wskaźnik 70%; następnie test statusu Pominięta i zgłoszenie nowego materiału z formularza zamówienia. Sprawdź odczyt na innym urządzeniu.
@@ -46,7 +46,7 @@
 - Pliki WZ/zdjęcia w Firestore są limitowane rozmiarem; większe dokumenty podłączaj bezpiecznym linkiem. GitHub Pages jest publiczny — **nigdy nie wgrywaj do niego haseł ani kluczy kont usługowych**.
 
 
-## Nowość 0.9.1 — baza dostawców
+## Nowość 0.9.2 — baza dostawców
 
 - Nowa zakładka **Dostawcy** dla administratora, zaopatrzeniowca oraz zarządu (zarząd tylko odczyt).
 - Kartoteka wspólna dla wszystkich budów: nazwa firmy, NIP, branża, miejscowość, osoba kontaktowa, telefon, e-mail, uwagi.
@@ -59,7 +59,19 @@
 
 ### Instalacja aktualizacji
 1. Zachowaj kopię eksportu danych w BETA 0.9.
-2. W Firebase wklej nowy plik **FIRESTORE-RULES-0.9.1.txt** i kliknij Publish.
+2. W Firebase wklej nowy plik **FIRESTORE-RULES-0.9.2.txt** i kliknij Publish.
 3. Na GitHubie wgraj osiem plików aplikacji (index.html, auth.js, workspace.js, styles.css, sw.js, manifest.webmanifest, icon-192.png, icon-512.png), zastępując dotychczasowe.
 4. Po wdrożeniu sprawdź w incognito: widoczność Dostawców, dodanie nowej firmy i zakup pozycji u dostawcy.
 5. Dane starych zamówień pozostają w bazie, bez uzupełnionych dostawców; uzupełniamy ich przy nowych zakupach.
+
+
+## Wersja 0.9.2 — bezpieczny import poprawionego pliku Kazimierzów
+- Kolumny są rozpoznawane po **nagłówkach**, nie numerach — dotyczy nowej kolumny Status (K) oraz Ilość dostarczona (L).
+- Statusy historyczne są zachowane jako osobne pole `excelStatus`; nie są mylone z jakościowym `rfiStatus`. Zachowane ID M-xxx, branża, priorytet, RFI i źródło.
+- Z pliku „Kazimierzów poprawiony(1).xlsx” rozpoznajemy 402 pozycji, w tym 3 usługi/odpady wyłączone z materiałów: 399 propozycji do importu.
+- **Ostrzeżenie krytyczne:** w arkuszu kolumna „Ilość dostarczona” równa się „Ilość do zamówienia” dla 387 wierszy, także „Do zamówienia” i „Pominięty”. Dane te są niespójne. Nie zaliczamy ich do fizycznego zatowarowania dla „W realizacji”, „Do zamówienia” ani „Pominięty”.
+- Import domyślnie **NIE** potwierdza fizycznego stanu na budowie. Administrator może włączyć jawne potwierdzenie historycznych pozycji „Zrealizowany”, o ile rzeczywiście znajdują się na budowie, oraz wyłączenie „Pominięty”. Dla pozycji z pustą ilością postęp pozostaje do ustalenia.
+- Duplikaty po ID są domyślnie pomijane. Administrator może dodatkowo wybrać aktualizację stanów już istniejących, ale nie nadpiszemy pozycji z potwierdzonym odbiorem, wcześniejszą ręczną korektą ani z inną zatwierdzoną ilością.
+- Import tylko do testów. Użyj kopii pliku pozbawionej poufnych danych, najlepiej na testowej budowie. Przed wdrożeniem produkcyjnym niezbędna jest kontrola uprawnień i niezależna kopia bezpieczeństwa.
+- Baza dostawców z wersji 0.9.1 pozostaje bez zmian — można przypisywać firmy przy zakupie danej pozycji.
+- Wgranie na GitHub: osiem plików strony, a w Firebase opublikuj reguły **FIRESTORE-RULES-0.9.2.txt**. Nie wgrywaj pliku reguł na GitHub.

@@ -1,4 +1,4 @@
-/* TaskPoint 0.9.1: Firebase Authentication + server-verified user profile */
+/* TaskPoint 0.9.2: Firebase Authentication + server-verified user profile */
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,sendPasswordResetEmail} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 import {getFirestore,doc,getDoc} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
@@ -22,6 +22,6 @@ onAuthStateChanged(auth,async user=>{
   if(!snap.exists()||snap.data().active!==true||!roles.has(snap.data().role))return message('Brak aktywnego profilu pracownika. Skontaktuj się z administratorem.',true);
   if(loaded && lastUid!==user.uid)return location.reload();
   lastUid=user.uid;document.body.classList.add('authenticated');
-  if(!loaded){loaded=true;const {mountWorkspace}=await import('./workspace.js?v=91');mountWorkspace({db,user,profile:snap.data(),logout})}
+  if(!loaded){loaded=true;const {mountWorkspace}=await import('./workspace.js?v=92');mountWorkspace({db,user,profile:snap.data(),logout})}
  }catch(e){document.body.classList.remove('authenticated');message(niceError(e),true)}
 });
