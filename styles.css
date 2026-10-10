@@ -61,3 +61,24 @@ body.authenticated .auth-screen{display:none!important}
 
 /* BETA 0.9.3: opis wyników łączonych filtrów */
 .tp-filter-results{margin:8px 0 14px;color:var(--text-secondary,#67778f);font-size:13px;line-height:1.5}.tp-filter-results strong{color:var(--text,#203047)}
+
+
+/* TaskPoint 0.9.4 — wgląd w procent zatowarowania każdej branży */
+.tp-branch-title {font-weight:750;color:#26445d;margin:16px 0 9px;font-size:14px}
+.tp-branch-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tp-branch-card {display:block;min-width:0;width:100%;background:#f6f9fd;border:1px solid #d9e3ed;border-radius:12px;padding:12px;text-align:left;color:#172b41;cursor:pointer;font:inherit;transition:background .16s ease,border-color .16s ease,transform .16s ease}
+.tp-branch-card:hover {border-color:#4f8ba6;background:#eff8fb;transform:translateY(-1px)}
+.tp-branch-card:focus-visible {outline:3px solid #238b9e;outline-offset:2px}
+.tp-branch-top {display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:13px}
+.tp-branch-top b {overflow-wrap:anywhere}
+.tp-branch-top strong {color:#186d62;font-size:20px;white-space:nowrap}
+.tp-branch-card .tp-progress {margin:10px 0 8px}
+.tp-branch-hint {display:block;color:#53677d;font-size:12px;line-height:1.5;min-height:19px;overflow-wrap:anywhere}
+.tp-branch-open {display:block;color:#125f85;font-size:12px;font-weight:750;margin-top:8px}
+.tp-branch-compact {grid-template-columns:1fr;gap:7px;margin-top:10px}
+.tp-branch-compact .tp-branch-card {padding:9px 10px}
+.tp-branch-compact .tp-branch-top strong {font-size:16px}
+.tp-branch-compact .tp-branch-card .tp-progress {height:6px;margin:5px 0}
+.tp-branch-compact .tp-branch-hint {font-size:11px}
+.tp-branch-compact .tp-branch-open {margin-top:4px}
+@media(max-width:800px){.tp-branch-grid {grid-template-columns:1fr}.tp-branch-card {padding:12px}.tp-branch-compact {grid-template-columns:1fr}}

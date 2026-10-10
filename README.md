@@ -1,3 +1,17 @@
+# TaskPoint BETA 0.9.4 — realizacja branżowa
+
+**Nowa funkcja:** pulpit i zakładka **Budowy** pokazują **zatowarowanie osobno dla branży Sanitarnej, Budowlanej i Elektrycznej** przy każdej inwestycji. Po kliknięciu branży przejdziesz do jej listy materiałowej z automatycznie ustawionym filtrem budowy i branży.
+
+Wskaźnik wykorzystuje dotychczasową funkcję `progressFor(projectId, branch)` i dane istniejące już w Firebase. Zasady obliczania nie uległy zmianie: dla każdej pozycji obliczamy min(1, (stan ręcznie potwierdzony + odebrane dostawy)/zatwierdzona ilość), potem średnią z pozycji branży o określonej ilości. Zatowarowania nie zwiększają same zamówienia ani status „W realizacji”. Pozycje pominięte i bez ustalonej ilości są wyłączone z mianownika; pokazywane są w licznikach. Brak pozycji z ustaloną ilością oznaczamy **„—”**, a nie 0%.
+
+**Nie zmieniaj reguł Firebase, nie importuj ponownie Excela.** Aktualizację wykonuje się wyłącznie przez zastąpienie 8 plików strony na GitHubie. Szczegóły: `INSTRUKCJA-START.txt`.
+
+**Test:** wybierz budowę testową, w której materiał sanitarny ma ilość 10, a ręcznie potwierdzony stan 5. Powinna pojawić się realizacja 50% branży Sanitarnej, jeśli to jedyna liczona pozycja sanitarna. Kliknięcie karty otwiera zakładkę Materiały z filtrem Sanitarna i wybraną budową.
+
+**Ograniczenia:** To informacja o zatowarowaniu materiałów, a nie o postępie wykonanych robót budowlanych. Dane mają charakter pilotażowy; dostęp kierowników do branż nie jest jeszcze izolowany na poziomie reguł Firestore. Przed użyciem poufnych danych konieczny jest audyt uprawnień.
+
+---
+
 # TaskPoint BETA 0.9.3 — filtr statusu
 
 **Nowość:** lista **Materiały** i **Zamówienia** mają osobne filtry „Status”, które można łączyć z filtrami Budowa i Branża. W materiałach filtry korzystają ze statusu z Excela z pierwszeństwem zatwierdzonej ręcznej korekty administratora. Procent fizycznego zatowarowania pozostaje niezależny od statusu deklarowanego w Excelu. W Zamówieniach filtr statusu działa na **pozycjach** zamówienia, więc zamówienie mieszane pokazuje tylko pasujące pozycje. Filtr nie zmienia danych, nie nadpisuje statusów i nie wpływa na istniejący skrypt powiadomień.

@@ -1,13 +1,21 @@
-TaskPoint BETA 0.9.3 — FILTRY STATUSU
+TASKPOINT BETA 0.9.4 — REALIZACJA WEDŁUG BRANŻ
 
-1. Firebase: NIE ZMIENIAJ reguł ani bazy. Reguły 0.9.2 pozostają aktualne.
-2. Zrób eksport danych jako kopię bezpieczeństwa.
+1. Użytkownik administrator: zrób eksport danych z TaskPoint przed aktualizacją.
+2. FIREBASE: NIC NIE ZMIENIAJ. Zostaw reguły 0.9.2 używane w wersji 0.9.3.
 3. Rozpakuj ZIP na MacBooku.
-4. Otwórz github.com/Klaudia399/TaskPoint. W Add file → Upload files wgraj osiem plików strony z paczki (bez reguł Firebase i README).
-5. Zastąp pliki o tych samych nazwach; kliknij Commit changes.
-6. Otwórz https://klaudia399.github.io/TaskPoint/ w incognito.
-7. W Materiały i Zamówienia zobaczysz filtr Status łączony z budową i branżą.
+4. GitHub: wejdź na https://github.com/Klaudia399/TaskPoint → Add file → Upload files.
+5. Prześlij 8 plików: index.html, auth.js, workspace.js, styles.css, sw.js,
+   manifest.webmanifest, icon-192.png, icon-512.png. Stare pliki o tych samych
+   nazwach zastąp nowymi i kliknij Commit changes.
+6. Nie przesyłaj na GitHub pliku FIRESTORE-RULES ani README — nie są potrzebne.
+7. Otwórz w incognito https://klaudia399.github.io/TaskPoint/
+8. Pulpit oraz Budowy: zobacz Sanitarna, Budowlana, Elektryczna z osobnymi procentami.
+9. Kliknij dowolną branżę → otworzy się Materiały z filtrami danej budowy i branży.
 
-Uwaga: „Zrealizowany” z Excela jest stanem deklarowanym; procent zatowarowania liczy potwierdzone ilości i pozostaje osobny.
+Wskaźniki: średnia realizacji ilości poszczególnych materiałów, z dostaw
+odebranych i ręcznie potwierdzonego stanu początkowego. Bez ustalonej ilości
+nie liczymy; pominięte pozycje wykluczamy. „—” oznacza brak danych
+umożliwiających obliczenie, nie 0%.
 
-Wersja testowa. Nie używaj poufnych danych przed audytem zasad dostępu.
+Nie zmieniamy schematu Firestore, uprawnień, adresu WWW, powiadomień
+ani istniejących danych. Pilotaż — sprawdź wyniki na inwestycji testowej.
