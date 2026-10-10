@@ -1,0 +1,61 @@
+TASKPOINT — BETA 0.3 — darmowa aplikacja demonstracyjna
+==========================================================
+
+CO JEST GOTOWE
+- 5 ról TESTOWYCH: kierownik budowy, zaopatrzeniowiec, magazyn, dyrektor, prezes.
+- Projekty (budowy), lista materiałowa bazowa, źródło pozycji i zatwierdzone zmiany.
+- Zaopatrzeniowiec: import materiałów przez wklejenie 4 kolumn z Excela lub CSV.
+- Kierownik: zapotrzebowania wielopozycyjne; oddzielne daty, priorytety i miejsca dostaw.
+- Kierownik: zgłoszenie dodatkowego materiału lub zmiany ilości i uzasadnienie.
+- Zaopatrzeniowiec: weryfikacja i przekazanie zmiany do zarządu.
+- Dyrektor LUB prezes: pojedyncza decyzja zatwierdzenia/odrzucenia.
+- Magazyn: przyjęcie na stan, wybór pozycji zamówienia do transportu,
+  data wywozu, miejsce załadunku, adres dostawy, ilość i kierowca.
+- Magazyn potwierdza faktyczny wywóz; kierownik potwierdza dostawę.
+- Dokumenty WZ/zdjęcia/PDF przy zamówieniach i transportach, komentarze.
+- Eksport i import lokalnej kopii danych JSON.
+
+WAŻNE OGRANICZENIA BETA
+- To NIE JEST jeszcze wdrożona platforma zespołowa.
+- Nie ma autentycznych kont pracowników ani bezpiecznych uprawnień serwerowych.
+- Przełącznik roli tylko symuluje widoki. Nie jest uwierzytelnieniem.
+- Dane są tylko na tym urządzeniu / w danej przeglądarce (localStorage).
+- Udostępnienie linku innym nie synchronizuje danych.
+- Pliki WZ również są lokalne i mają limit 700 KB na załącznik.
+- Nie wgrywaj poufnych faktur, danych osobowych, dokumentów firmowych.
+- Rejestr przyjęć to wersja testowa, nie księga magazynowa ani ERP.
+- Import listy materiałów: wklej dane z Excela lub CSV, nie jest to
+  bezpośredni odczyt XLSX/PDF. PDF może być dołączony jako załącznik.
+- Użytkowanie wersji beta jest bezpłatne; serwerowa wersja firmowa wymaga
+  osobnej konfiguracji usług i sprawdzenia ich limitów.
+
+TEST NA MAC / WINDOWS
+1. Rozpakuj wszystkie pliki ZIP do jednego folderu.
+2. Otwórz index.html w przeglądarce.
+3. Wybierz u góry rolę Magazyn i przejdź do Transport lub Magazyn.
+4. Przy pierwszym uruchomieniu są dane przykładowe.
+
+PUBLIKACJA DARMOWEJ STRONY PWA (DO TESTÓW NA IPHONE, ANDROIDZIE, MACU)
+1. Wejdź na https://github.com i utwórz darmowe konto.
+2. Utwórz nowe PUBLICZNE repozytorium, np. taskpoint-beta.
+3. Wgraj zawartość tego ZIP (pliki muszą być w katalogu głównym repozytorium).
+4. Otwórz Settings -> Pages.
+5. W Build and deployment wybierz Deploy from a branch.
+6. Branch: main, Folder: / (root), kliknij Save.
+7. Otwórz adres https://TWOJ-LOGIN.github.io/taskpoint-beta/.
+8. Android: menu Chrome -> Dodaj do ekranu głównego / Zainstaluj aplikację.
+   iPhone: Safari -> Udostępnij -> Do ekranu początkowego.
+   Mac: otwórz ten sam adres w przeglądarce.
+
+UWAGA: GitHub Pages publikuje KOD STRONY PUBLICZNIE. W tym ZIP nie ma
+poufnych danych firmy, tylko sztuczne dane pokazowe. Nie wgrywaj
+rzeczywistych danych do repozytorium.
+
+WARIANT GOOGLE
+Google Apps Script może wyświetlać stronę WWW i korzystać z Arkuszy Google
+oraz Dysku Google. To sensowny kierunek do kolejnej wersji współdzielonej.
+Nie kopiuj jednak samego interfejsu do Apps Script i nie uznawaj tego
+za aplikację z prawdziwymi rolami: potrzebne są serwerowe kontrole dostępu,
+wspólna baza danych i uporządkowane przechowywanie WZ.
+
+WERSJA 0.3 / DEMO — wszystkie konta, daty i projekty są przykładowe.

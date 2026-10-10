@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101e34">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Taskpoint">
+<meta name="description" content="Taskpoint — bezpłatna demonstracyjna aplikacja do zarządzania materiałami budowlanymi, zamówieniami i transportem.">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" href="./icon-192.png">
+<link rel="stylesheet" href="./styles.css">
+<title>Taskpoint — beta</title>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brandmark">T<span>P</span></div><div><strong>Taskpoint</strong><small>Platforma zaopatrzenia <span class="beta">BETA</span></small></div></div>
+    <div class="side-label">NAWIGACJA</div>
+    <nav id="side-nav" aria-label="Nawigacja"></nav>
+    <div class="sidebar-bottom"><div class="demo-info"><span class="pulse"></span> Tryb demonstracyjny<br><small>Dane zapisane na tym urządzeniu</small></div><button class="nav-settings" data-tab="settings">⚙ Ustawienia i eksport</button></div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div class="mobile-brand"><div class="brandmark">TP</div><strong>Taskpoint</strong><span class="beta">BETA</span></div><div class="top-context" id="top-context"></div><div class="top-actions"><label class="role-picker"><span>Przeglądasz jako</span><select id="role-select" aria-label="Rola testowego użytkownika"><option value="kierownik">Kierownik budowy</option><option value="zaopatrzenie">Zaopatrzeniowiec</option><option value="magazyn">Magazyn</option><option value="dyrektor">Dyrektor</option><option value="prezes">Prezes</option></select></label><div class="avatar" id="avatar">K</div></div></header>
+    <div class="workarea"><div id="banner" class="notice"><span>🧪 <b>Wersja demonstracyjna.</b> Role są symulowane, a dane nie synchronizują się między urządzeniami. Nie wgrywaj poufnych dokumentów firmy.</span><button id="banner-close" aria-label="Zamknij informację">×</button></div><div id="page"></div></div>
+  </main>
+</div>
+<nav id="mobile-nav" class="mobile-nav" aria-label="Nawigacja mobilna"></nav>
+<div id="modal" class="modal-host" hidden></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="./app.js" defer></script>
+<script>if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
+</body>
+</html>
