@@ -1,0 +1,60 @@
+TASKPOINT BETA 0.7 — WSPÓLNE DANE W FIREBASE
+===========================================
+
+UWAGA: wersja pilotażowa do testów, NIE do poufnych danych ani produkcyjnych rozliczeń.
+
+Nowość: nowe budowy, materiały, zamówienia wielopozycyjne, zmiany i decyzje zarządu,
+transport, przyjęcia magazynowe i komentarze są synchronizowane przez Cloud Firestore.
+Logowanie oraz role nadal pochodzą z Firebase Authentication / kolekcji users.
+
+Bezpieczeństwo i ograniczenia:
+- Włączona obsługa ról po stronie Firestore, a nie tylko widoków.
+- Kierownik widzi wyłącznie przypisane budowy.
+- Dyrektor LUB prezes może wydać decyzję — tylko jedna decyzja dla zmiany.
+- Historia lokalnych zamówień 0.6 NIE jest importowana automatycznie.
+- Brak przesyłania zdjęć, WZ i PDF w tej wersji.
+- Brak systemowych powiadomień push. Liczniki w pulpicie to nie powiadomienia push.
+- Nie ma jeszcze pełnej walidacji po stronie serwera dla wszystkich ilości i relacji
+  zamówień. Przed wdrożeniem rzeczywistego procesu potrzebne są testy zabezpieczeń.
+- Kopie Firestore w planie Spark są ręczne — zakładka Ustawienia oferuje eksport JSON.
+- Plan Spark ma limity — nie włączaj płatnego Blaze ani karty płatniczej.
+
+KROK 1. ZABEZPIECZ DOTYCHCZASOWE DANE
+Jeżeli w 0.6 wpisywano testowe zamówienia, otwórz TaskPoint 0.6 -> Ustawienia
+-> Eksport danych. Zapisz pobrany JSON na swoim MacBooku.
+
+KROK 2. REGUŁY FIRESTORE (TERAZ)
+Wejdź na https://console.firebase.google.com/
+TaskPoint -> Firestore Database -> Rules.
+Otwórz w TextEdit plik FIRESTORE-RULES-0.7.txt z tej paczki.
+Skopiuj CAŁĄ treść i zastąp nią poprzednie reguły. Kliknij Publish.
+Jeśli Firebase pokaże błąd, nie kontynuuj: zrób zrzut ekranu z komunikatem.
+
+KROK 3. NOWE PLIKI NA GITHUB (DOPIERO PO OPUBLIKOWANIU REGUŁ)
+Otwórz https://github.com/Klaudia399/TaskPoint
+Add file -> Upload files, wybierz pliki:
+  index.html, auth.js, workspace.js, styles.css, sw.js,
+  manifest.webmanifest, icon-192.png, icon-512.png
+Pomiń FIRESTORE-RULES-0.7.txt i INSTRUKCJA-START.txt (nie są potrzebne na stronie).
+Nie wgrywaj ZIP. Nie usuwaj repozytorium ani README.md.
+Plik app.js z wcześniejszej wersji może pozostać na GitHubie — nowa wersja go nie używa.
+Kliknij Commit changes i odczekaj na aktualizację GitHub Pages.
+
+KROK 4. PIERWSZY TEST
+Otwórz https://klaudia399.github.io/TaskPoint/
+Zaloguj się kontem admin.
+1) Budowy -> Dodaj budowę (możesz wpisać 'TEST — Budowa 1').
+2) Materiały -> Dodaj / importuj, np.:
+   Rura PVC 110; 100; mb; Przedmiar
+   Kolano PVC 110; 30; szt.; Projekt
+3) Zamówienia -> Nowe zapotrzebowanie — wybierz materiały, ilości i terminy.
+4) Otwórz TaskPoint na telefonie Android z tym SAMYM kontem. Zamówienie powinno
+   być widoczne po wczytaniu projektu.
+
+KROK 5. INNI UŻYTKOWNICY (PÓŹNIEJ)
+Administrator tworzy konta w Firebase Authentication -> Users.
+TaskPoint -> Użytkownicy -> Dodaj profil pracownika (UID, rola).
+TaskPoint -> Budowy -> Przypisz kierownika — wpisz dokładny UID pracownika.
+Nie używaj opcji zapisu danych realnej firmy bez pełnego testu uprawnień.
+
+Do edytowania reguł nie potrzeba Terminala ani instalacji dodatkowych programów.

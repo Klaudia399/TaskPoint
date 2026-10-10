@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function hasProfile() {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    function profile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function active() { return hasProfile() && profile().active == true; }
+    function inRole(r) { return active() && profile().role == r; }
+    function admin() { return inRole('admin'); }
+    function buyer() { return admin() || inRole('zaopatrzenie'); }
+    function warehouse() { return admin() || inRole('magazyn'); }
+    function board() { return admin() || inRole('dyrektor') || inRole('prezes'); }
+    function manager() { return admin() || inRole('kierownik'); }
+    function staff() { return buyer() || warehouse() || board(); }
+    function projectAvailable(pid) {
+      return active() && exists(/databases/$(database)/documents/projects/$(pid)) &&
+        (staff() || request.auth.uid in get(/databases/$(database)/documents/projects/$(pid)).data.memberUids);
+    }
+    function rightProject(pid) { return request.resource.data.projectId == pid; }
+    function changedOnly(fields) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields); }
+
+    match /users/{uid} {
+      allow get: if active() && (request.auth.uid == uid || admin());
+      allow list: if admin();
+      allow create, update, delete: if admin();
+    }
+    match /projects/{pid} {
+      allow get, list: if active() && (staff() || request.auth.uid in resource.data.memberUids);
+      allow create: if admin() && request.resource.data.keys().hasAll(['name','memberUids','createdByUid'])
+        && request.resource.data.memberUids is list && request.resource.data.createdByUid == request.auth.uid;
+      allow update: if admin() && changedOnly(['name','address','memberUids','managerLabel','updatedAt']);
+      allow delete: if false;
+
+      match /materials/{mid} {
+        allow get, list: if projectAvailable(pid);
+        allow create: if projectAvailable(pid) && rightProject(pid) && (
+          buyer() && request.resource.data.source != 'Dodatkowe' ||
+          board() && request.resource.data.source == 'Dodatkowe' &&
+          request.resource.data.approvedVia is string &&
+          getAfter(/databases/$(database)/documents/projects/$(pid)/changes/$(request.resource.data.approvedVia)).data.status == 'zatwierdzona' &&
+          getAfter(/databases/$(database)/documents/projects/$(pid)/changes/$(request.resource.data.approvedVia)).data.kind == 'new' &&
+          getAfter(/databases/$(database)/documents/projects/$(pid)/changes/$(request.resource.data.approvedVia)).data.newQty == request.resource.data.approvedQty &&
+          getAfter(/databases/$(database)/documents/projects/$(pid)/changes/$(request.resource.data.approvedVia)).data.newName == request.resource.data.name &&
+          getAfter(/databases/$(database)/documents/projects/$(pid)/changes/$(request.resource.data.approvedVia)).data.unit == request.resource.data.unit
+        );
+        allow update: if projectAvailable(pid) && request.resource.data.projectId == resource.data.projectId && (
+          buyer() && changedOnly(['name','unit','updatedAt']) ||
+          board() && changedOnly(['approvedQty','approvedVia','updatedAt']) &&
+          request.resource.data.approvedVia is string &&
+          getAfter(/databases/$(database)/documents/projects/$(pid)/changes/$(request.resource.data.approvedVia)).data.status == 'zatwierdzona' &&
+          getAfter(/databases/$(database)/documents/projects/$(pid)/changes/$(request.resource.data.approvedVia)).data.kind == 'qty' &&
+          getAfter(/databases/$(database)/documents/projects/$(pid)/changes/$(request.resource.data.approvedVia)).data.materialId == mid &&
+          getAfter(/databases/$(database)/documents/projects/$(pid)/changes/$(request.resource.data.approvedVia)).data.oldQty == resource.data.approvedQty &&
+          getAfter(/databases/$(database)/documents/projects/$(pid)/changes/$(request.resource.data.approvedVia)).data.newQty == request.resource.data.approvedQty
+        );
+        allow delete: if false;
+      }
+      match /orders/{oid} {
+        allow get, list: if projectAvailable(pid);
+        allow create: if projectAvailable(pid) && manager() && rightProject(pid) &&
+          request.resource.data.createdByUid == request.auth.uid &&
+          request.resource.data.items is list && request.resource.data.items.size() > 0 && request.resource.data.items.size() <= 30;
+        allow update: if projectAvailable(pid) && buyer() && changedOnly(['items','updatedAt','updatedByUid']);
+        allow delete: if false;
+      }
+      match /changes/{cid} {
+        allow get, list: if projectAvailable(pid);
+        allow create: if projectAvailable(pid) && manager() && rightProject(pid) &&
+          request.resource.data.createdByUid == request.auth.uid &&
+          request.resource.data.status == 'oczekuje_zaop';
+        allow update: if projectAvailable(pid) && (
+          buyer() && resource.data.status == 'oczekuje_zaop' && request.resource.data.status == 'oczekuje_zarzad' &&
+            changedOnly(['status','reviewedAt','reviewedBy','reviewedByUid']) ||
+          board() && resource.data.status == 'oczekuje_zarzad' &&
+            request.resource.data.status in ['zatwierdzona','odrzucona'] &&
+            changedOnly(['status','decidedAt','approvedBy','approvedByUid'])
+        );
+        allow delete: if false;
+      }
+      match /shipments/{sid} {
+        allow get, list: if projectAvailable(pid);
+        allow create: if projectAvailable(pid) && warehouse() && rightProject(pid) &&
+          request.resource.data.status == 'zaplanowany' && request.resource.data.createdByUid == request.auth.uid;
+        allow update: if projectAvailable(pid) && (
+          warehouse() && resource.data.status == 'zaplanowany' && request.resource.data.status == 'wydany' &&
+            changedOnly(['status','actualDate','dispatchedByUid']) ||
+          manager() && resource.data.status == 'wydany' && request.resource.data.status == 'odebrany' &&
+            changedOnly(['status','receivedAt','receivedByUid'])
+        );
+        allow delete: if false;
+      }
+      match /stock/{sid} {
+        allow get, list: if projectAvailable(pid);
+        allow create: if projectAvailable(pid) && warehouse() && rightProject(pid) && request.resource.data.createdByUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+      match /comments/{cid} {
+        allow get, list: if projectAvailable(pid);
+        allow create: if projectAvailable(pid) && rightProject(pid) && request.resource.data.authorUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
