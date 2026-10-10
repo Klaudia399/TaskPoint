@@ -18,3 +18,7 @@ body.authenticated .auth-screen{display:none!important}
 .auth-caution{border-radius:10px;background:#f1f5fb;color:#59677b;font-size:12px;line-height:1.5;padding:12px;margin-top:6px}
 .auth-logout{padding:9px 12px;border:1px solid #dbe3ee;background:white;color:#34445e;border-radius:10px;font-size:12px;font-weight:700}
 @media(max-width:700px){.auth-card{padding:22px}.auth-logout{padding:7px 8px}}
+
+/* Version 0.6 - Firestore verified role label, not a role picker. */
+.verified-role{background:#eff5ff;border:1px solid #d2e0f7;color:#234b80;border-radius:10px;padding:10px 12px;font-weight:750;font-size:12px;white-space:nowrap}
+@media(max-width:720px){.verified-role{font-size:10px;padding:8px;max-width:145px;overflow:hidden;text-overflow:ellipsis}}

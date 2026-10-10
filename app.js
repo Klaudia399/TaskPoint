@@ -1,15 +1,14 @@
-/* TaskPoint beta 0.5: authenticated demo. Operational data local per Firebase UID; no shared Firestore data or role enforcement yet. */
+/* TaskPoint beta 0.6: Firebase profile verified before demo. Local-only business data. Server-side authorization for operational records is NOT implemented. */
 (() => {
 'use strict';
 const STORE='taskpoint-beta-v3-'+(window.TASKPOINT_UID||'anonymous');
-const ROLE_STORE='taskpoint-demo-role-'+(window.TASKPOINT_UID||'anonymous');
 const today=()=>new Date().toISOString().slice(0,10);
 const addDays=(n)=>{let d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)};
 const uid=(prefix='X')=>prefix+'-'+Math.random().toString(36).slice(2,9).toUpperCase();
 const escapeHtml=(x)=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(x)=>x?new Date(`${x}T12:00:00`).toLocaleDateString('pl-PL'):'—';
 const stamp=(x)=>x?new Date(x).toLocaleString('pl-PL'):'—';
-const level={kierownik:'Kierownik budowy',zaopatrzenie:'Zaopatrzeniowiec',magazyn:'Magazyn',dyrektor:'Dyrektor',prezes:'Prezes'};
+const level={admin:'Administrator',kierownik:'Kierownik budowy',zaopatrzenie:'Zaopatrzeniowiec',magazyn:'Magazyn',dyrektor:'Dyrektor',prezes:'Prezes'};
 const navigation=[['dashboard','⌂','Pulpit'],['projects','▥','Budowy'],['materials','▤','Materiały'],['orders','▣','Zamówienia'],['changes','✓','Akceptacje'],['transport','🚚','Transport'],['warehouse','▦','Magazyn'],['docs','▧','Dokumenty']];
 const priorities={niski:['Niski',''],standard:['Standardowy','blue'],wysoki:['Wysoki','orange'],krytyczny:['Krytyczny','red']};
 const statuses={zgloszone:['Zgłoszone','orange'],zamowione:['Zamówione','blue'],czesciowo:['Częściowo dostarczone','orange'],dostarczone:['Dostarczone','green'],oczekuje_zaop:['Weryfikacja zaopatrzenia','orange'],oczekuje_zarzad:['Do akceptacji zarządu','purple'],zatwierdzona:['Zatwierdzona','green'],odrzucona:['Odrzucona','red'],zaplanowany:['Zaplanowany','blue'],wydany:['Wydany z magazynu','orange'],odebrany:['Potwierdzona dostawa','green']};
@@ -25,13 +24,13 @@ shipments:[{id:'T-001',projectId:'B-01',orderId:'Z-1001',orderItemId:'OI-1',mate
 stock:[{id:'MG-001',projectId:'B-01',material:'Rura PVC 110',qty:50,unit:'mb',date:today(),note:'Przykładowy wpis magazynowy'}],docs:[],comments:[]});
 let db;try{db=JSON.parse(localStorage.getItem(STORE))||demo()}catch{db=demo()}
 if(db.version!==3){db=demo()}
-let role=localStorage.getItem(ROLE_STORE)||'zaopatrzenie';
+const role=window.TASKPOINT_ROLE;
 let current='dashboard', selectedProject='all', filter='';
 const byId=id=>document.getElementById(id);
-const managers=()=>['kierownik'].includes(role);
-const buyers=()=>role==='zaopatrzenie';
-const warehouse=()=>role==='magazyn';
-const bosses=()=>role==='dyrektor'||role==='prezes';
+const managers=()=>['kierownik','admin'].includes(role);
+const buyers=()=>role==='zaopatrzenie'||role==='admin';
+const warehouse=()=>role==='magazyn'||role==='admin';
+const bosses=()=>role==='dyrektor'||role==='prezes'||role==='admin';
 const projectName=id=>db.projects.find(x=>x.id===id)?.name||'Nieznana budowa';
 const mat=id=>db.materials.find(x=>x.id===id);
 const order=id=>db.orders.find(x=>x.id===id);
@@ -51,8 +50,8 @@ function header(title,subtitle,actions=''){return `<div class="section-top"><div
 function cardEmpty(s){return `<div class="empty"><div class="ico">▧</div>${s}</div>`}
 function rowStat(label,val,ico){return `<div class="stat"><div class="stat-icon">${ico}</div><strong class="number">${val}</strong><small>${label}</small></div>`}
 function draw(){
-  const cap=document.querySelector('#role-select'); if(![...cap.options].some(x=>x.value==='magazyn')) cap.insertAdjacentHTML('beforeend','<option value="magazyn">Magazyn</option>');cap.value=role;
-  byId('avatar').textContent=role==='zaopatrzenie'?'Z':role==='kierownik'?'K':role==='magazyn'?'M':'D';
+  byId('role-display').textContent=roleName();
+  byId('avatar').textContent=role==='admin'?'A':role==='zaopatrzenie'?'Z':role==='kierownik'?'K':role==='magazyn'?'M':'D';
   byId('top-context').textContent='Zarządzanie inwestycjami i zaopatrzeniem';
   const navItems=navigation.filter(x=>x[0]!=='warehouse'||true);
   byId('side-nav').innerHTML=navItems.map(([tab,icon,name])=>`<button data-tab="${tab}" class="${current===tab?'active':''}"><span class="nav-icon">${icon}</span>${name}${tab==='changes'&&db.changes.some(x=>bosses()?x.status==='oczekuje_zarzad':buyers()?x.status==='oczekuje_zaop':false)?'<span class="nav-counter">!</span>':''}</button>`).join('');
@@ -150,7 +149,7 @@ const actions={
 };
 document.addEventListener('click',e=>{let b=e.target.closest('[data-tab],[data-action]');if(!b)return;if(b.dataset.tab){setTab(b.dataset.tab);return}let a=actions[b.dataset.action];if(a)a(b.dataset.id,e)});
 document.addEventListener('submit',submitForm);
-document.addEventListener('change',e=>{let x=e.target;if(x.id==='role-select'){role=x.value;localStorage.setItem(ROLE_STORE,role);selectedProject='all';draw()}else if(x.id==='project-filter'){selectedProject=x.value;draw()}else if(x.id==='f-projectId'&&byId('new-order-form')){byId('order-rows').innerHTML='';addOrderRow()}else if(x.id==='f-projectId'&&byId('new-change-form')){rebuildChangeMats()}else if(x.id==='f-kind'){changeKind()}else if(x.id==='f-orderItemId'){let f=findItem(x.value);if(f){byId('f-qty').value=String(Math.max(0,f.item.qty-(f.item.delivered||0)));byId('f-destination').value=projectName(f.order.projectId)}}else if(x.id==='restore-file'&&x.files?.[0]){restoreData(x.files[0])}});
+document.addEventListener('change',e=>{let x=e.target;if(x.id==='project-filter'){selectedProject=x.value;draw()}else if(x.id==='f-projectId'&&byId('new-order-form')){byId('order-rows').innerHTML='';addOrderRow()}else if(x.id==='f-projectId'&&byId('new-change-form')){rebuildChangeMats()}else if(x.id==='f-kind'){changeKind()}else if(x.id==='f-orderItemId'){let f=findItem(x.value);if(f){byId('f-qty').value=String(Math.max(0,f.item.qty-(f.item.delivered||0)));byId('f-destination').value=projectName(f.order.projectId)}}else if(x.id==='restore-file'&&x.files?.[0]){restoreData(x.files[0])}});
 document.addEventListener('input',e=>{if(e.target.id==='search-filter'){filter=e.target.value;let focus=e.target.selectionStart;draw();let input=byId('search-filter');if(input){input.focus();input.setSelectionRange(focus,focus)}}});
 byId('banner-close').addEventListener('click',()=>byId('banner').remove());
 byId('modal').addEventListener('click',e=>{if(e.target===byId('modal'))closeModal()});

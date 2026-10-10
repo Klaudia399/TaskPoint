@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /users/{userId} {
+      // Użytkownik pobiera wyłącznie swój profil; admin może odczytać wszystkie.
+      allow get: if request.auth != null &&
+        (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      // Użytkownik NIE zmienia własnej roli, statusu ani listy przypisanych budów.
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Inne dane firmowe nadal całkowicie zablokowane.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

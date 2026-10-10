@@ -1,42 +1,43 @@
-TASKPOINT — BETA 0.5 — logowanie Firebase
-=======================================
+TASKPOINT — BETA 0.6 — ROLE ODCZYTYWANE Z FIREBASE
+=================================================
 
-ZMIANY W TEJ WERSJI
-- Logowanie e-mail/hasło przez Firebase Authentication.
-- Loguje się użytkownik dodany wcześniej w Firebase Authentication > Users.
-- Wylogowanie oraz przypomnienie hasła (przez e-mail).
-- Dane demonstracyjne lokalne, rozdzielane według Firebase User UID na urządzeniu.
-- Dotychczasowe widoki: budowy, materiały, zamówienia, akceptacje, transport,
-  magazyn, dokumenty i komentarze są zachowane.
+CO NOWE:
+- Logowanie Firebase e-mail/hasło.
+- Po zalogowaniu aplikacja pobiera users/<uid> z Cloud Firestore.
+- Bez dokumentu profilu / aktywnego konta / dozwolonej roli nie wpuszcza do aplikacji.
+- Zamiast przełącznika ról widać rzeczywistą rolę zapisaną w Firebase.
+- Administrator w lokalnym demo widzi wszystkie funkcje, w tym akceptacje.
+- Nie zmieniono modułów: budowy, materiały, zamówienia, magazyn, transport, dokumenty.
 
-BARDZO WAŻNE — OGRANICZENIA
-- Rejestracja/logowanie NIE nadaje pracownikowi uprawnień do dokumentów firmy.
-- Przełącznik ról jest nadal symulatorem (nie zabezpieczeniem).
-- Zamówienia, WZ i raporty NIE SYNCHRONIZUJĄ SIĘ między urządzeniami.
-- Cloud Firestore nadal ma pozostać z zasadą `allow read, write: if false;`.
-- Nie dodawaj rzeczywistych poufnych danych ani pracowników do aplikacji,
-  dopóki nie wdrożymy bezpiecznych reguł dostępu i współdzielonych danych.
-- KOD aplikacji w publicznym GitHub Pages jest publiczny. Firebase Web Config
-  jest publiczną konfiguracją, a nie hasłem administratora. Nie wrzucaj
-  kluczy konta serwisowego ani innych sekretów do repozytorium.
-- Firebase Authentication pozwala na usługę logowania; konfiguracja nie
-  blokuje technicznie samodzielnego założenia konta przez API. Zapis do
-  Firestore pozostaje zablokowany — nie ustawiaj reguł auth != null dla wszystkich.
+WYMAGANE REGUŁY FIRESTORE:
+- W pliku FIRESTORE-RULES-0.6.txt znajdują się bardziej restrykcyjne reguły
+  niż w poprzedniej wersji: profil użytkownika może modyfikować tylko administrator.
+- Wejdź w Firebase > Firestore Database > Rules, wklej CAŁY plik reguł,
+  naciśnij Publish.
+- Zakładają kolekcję users oraz dokument administratora o Document ID = UID
+  istniejącego konta Authentication, role = admin (string), active = true (boolean).
+- NIE używaj ogólnego `allow read, write: if request.auth != null`.
 
-INSTRUKCJA AKTUALIZACJI NA GITHUBIE (MACBOOK)
-1. Rozpakuj TaskPoint-BETA-0.5.zip w Finderze.
-2. Na GitHub: https://github.com/Klaudia399/TaskPoint otwórz Add file > Upload files.
-3. Wybierz WSZYSTKIE pliki z rozpakowanej paczki (nie wgrywaj ZIP).
-4. Potwierdź zapis przyciskiem Commit changes.
-5. Sprawdź opublikowaną stronę: https://klaudia399.github.io/TaskPoint/
-6. Wpisz e-mail i hasło konta w Firebase Authentication > Users.
-7. Jeśli ekran jest stary, odśwież stronę; w Chrome możesz też usunąć dane
-   witryny dla klaudia399.github.io, ale stracisz lokalne dane demonstracyjne.
+PUBLIKACJA NA GITHUB PAGES:
+1. Rozpakuj paczkę ZIP.
+2. GitHub > Klaudia399/TaskPoint > Add file > Upload files.
+3. Wgraj pliki: index.html, app.js, auth.js, styles.css, sw.js,
+   manifest.webmanifest, icon-192.png, icon-512.png.
+4. Pliki instrukcji można także wgrać, ale nie są potrzebne do uruchomienia.
+5. Kliknij Commit changes.
+6. Otwórz https://klaudia399.github.io/TaskPoint/ i zaloguj się.
+7. Na górze powinno być „Administrator”, a nie lista ról.
+8. Jeśli przeglądarka pokazuje starą wersję, odśwież ją; stary service worker
+   może w razie problemów wymagać usunięcia danych witryny.
 
-JEŚLI LOGOWANIE MA PROBLEM Z DOMENĄ
-- Firebase Console > Authentication > Settings > Authorized domains.
-- Dodaj domenę `klaudia399.github.io` bez https:// i bez /TaskPoint/.
-
-NIE EDYTUJ FIRESTORE RULES W TYM KROKU.
-Następny etap: konta z potwierdzonymi rolami, bezpieczne uprawnienia Firestore,
-a następnie wspólne zamówienia, zmiany i transport.
+OGRANICZENIA BEZPIECZEŃSTWA I FUNKCJONALNOŚCI:
+- Rola zweryfikowana przez Firestore, ale BIZNESOWE AKCJE w aplikacji to DEMO.
+- Wszystkie zamówienia, materiały, transporty, komentarze i załączniki
+  nadal zapisują się w localStorage urządzenia, a nie w Firestore.
+- Nie ma prawdziwego panelu zarządzania kontami, współdzielenia danych,
+  automatycznych powiadomień ani przypisania budów do kierowników.
+- Wersja nie jest przeznaczona do poufnych danych firmowych i produkcji.
+- Firebase config w kodzie WEB jest publiczny — nigdy nie wgrywaj haseł ani
+  prywatnych kluczy service account na GitHub Pages.
+- Zmiana roli przez administratora w Firebase wymaga odświeżenia strony.
+- Zmiany reguł i kodu realizuj najpierw na kontach testowych.
