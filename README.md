@@ -1,3 +1,13 @@
+# TaskPoint BETA 0.9.3 — filtr statusu
+
+**Nowość:** lista **Materiały** i **Zamówienia** mają osobne filtry „Status”, które można łączyć z filtrami Budowa i Branża. W materiałach filtry korzystają ze statusu z Excela z pierwszeństwem zatwierdzonej ręcznej korekty administratora. Procent fizycznego zatowarowania pozostaje niezależny od statusu deklarowanego w Excelu. W Zamówieniach filtr statusu działa na **pozycjach** zamówienia, więc zamówienie mieszane pokazuje tylko pasujące pozycje. Filtr nie zmienia danych, nie nadpisuje statusów i nie wpływa na istniejący skrypt powiadomień.
+
+**Aktualizacja:** nowe reguły Firebase **nie są potrzebne**; pozostaw opublikowane reguły 0.9.2. Zachowaj eksport danych na wszelki wypadek. Na GitHubie w istniejącym repozytorium TaskPoint wgraj osiem plików strony (index.html, auth.js, workspace.js, styles.css, sw.js, manifest.webmanifest, icon-192.png, icon-512.png), a następnie Commit changes. Po publikacji sprawdź w incognito. Pozostaw istniejący projekt Firebase bez zmian.
+
+**Test:** Materiały → wybierz budowę Kazimierzów → branża Sanitarna → Status „Do zamówienia”; po zmianie na „W realizacji” tabela powinna pokazać inne pozycje. Zamówienia → wybierz status „Zamówione u dostawcy”, połącz z branżą i sprawdź, czy widoczne są tylko pasujące pozycje zamówień. Brak pozycji powinien dać komunikat „Brak ... w tym filtrze”.
+
+---
+
 # TaskPoint BETA 0.9.2 — aktualizacja pilotażowa
 
 **Ta wersja to pilotaż do testów. Nie jest certyfikowanym ani audytowanym produkcyjnym systemem zamówień.**
