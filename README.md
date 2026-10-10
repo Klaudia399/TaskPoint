@@ -1,71 +1,46 @@
-# TaskPoint BETA 0.8
+# TaskPoint BETA 0.9 — aktualizacja pilotażowa
 
-TASKPOINT BETA 0.8 — OBIEG MATERIAŁÓW / WSPÓLNE DANE FIREBASE
-===========================================================
+**Ta wersja to pilotaż do testów. Nie jest certyfikowanym ani audytowanym produkcyjnym systemem zamówień.**
 
-PILOTAŻ / DANE TESTOWE — NIE ZASTĘPUJE SYSTEMU PRODUKCYJNEGO
+## Przypisywanie kilku kierowników do jednej budowy
 
-ETAPY JEDNEJ POZYCJI
-1. Lista z przedmiaru / projektu (zaopatrzenie importuje XLSX)
-2. Kierownik składa zapotrzebowanie (ilość, termin, miejsce i priorytet)
-3. Zaopatrzenie akceptuje -> zamawia u dostawcy; po zakupie znika z jego aktywnych
-4. Magazyn potwierdza przyjętą ilość i miejsce składowania, także częściowo
-5. Magazyn planuje transport (data, kierowca, budowa) i wydaje towar
-6. Kierownik klika "Transport dotarł" — zapisuje się data i godzina
-7. Kierownik potwierdza odbiór i faktyczną ilość oraz ewentualne braki
-8. Po zakończeniu zadanie przechodzi z listy Aktywne do Zakończone dla odpowiedniej roli.
+- **Budowy → Kierownicy i zastępstwa:** administrator dodaje wielu kierowników do tej samej inwestycji, z branżą Budowlana, Sanitarna, Elektryczna albo Wszystkie branże. Jedna osoba może być przypisana do kilku branż.
+- Przy dodawaniu kierownika można oznaczyć **Zastępstwo** i wpisać daty od–do. Użytkownik musi mieć aktywny profil o roli `kierownik`.
+- Gdy powiadomienie dotyczy jednoznacznie jednej branży, trafia do aktualnie przypisanych kierowników tej branży; komentarze dotyczące całego zamówienia wielobranżowego mogą trafić do wszystkich kierowników inwestycji. Zarząd i zaopatrzenie zachowują ustalone zasady powiadomień.
+- **Ważne ograniczenie 0.9:** data końcowa steruje informacjami i kierowaniem nowych powiadomień, ale nie wyłącza automatycznie dostępu Firebase. Po zakończeniu zastępstwa administrator musi kliknąć „Usuń przypisanie”. Kierownicy przypisani do tej samej budowy mają jeszcze dostęp do informacji ze wszystkich jej branż — filtr branżowy nie stanowi osobnego zabezpieczenia.
+- Dotychczasowe przypisania zapisane tylko w `memberUids` są widoczne jako „Wszystkie branże”; po dodaniu pierwszego przypisania zostaną zachowane. Nie trzeba usuwać istniejących kont ani budów.
 
-POZOSTAŁE FUNKCJE
-- Zdjęcia z telefonu, małe PDF (do 120 KB) oraz linki do większych dokumentów
-  na zamówieniu, pozycji materiałowej, zmianie, magazynie lub transporcie;
-  zdjęcie jest kompresowane i zapisywane w Firestore (pilotaż).
-- Komentarze z datą/godziną, wzmianki @Magazyn/@Kierownik i wybór pracownika.
-- Powiadomienia wewnątrz aplikacji (nie systemowy push, nie SMS/WhatsApp).
-  Komentarz zarządu powiadamia kierownika przypisanej budowy oraz zaopatrzenie.
-- Bezpośredni import Excel XLSX/XLS/CSV przez bibliotekę SheetJS z publicznego CDN.
-  Obsługiwany format to 01_ZAPOTRZEBOWANIE z pliku "Kazimierzów".
-  Pomijane są usługi/odpady; ID M-001 itd. zapobiega duplikatom.
-  Stare ilości nie są nadpisywane: różnice wymagają osobnego procesu zatwierdzenia.
-  RFI/konflikty w danych powinny zostać wyjaśnione przed zamówieniem.
+## Co nowego
 
-DARMOWE LIMITY: Firebase Spark + Firestore; duże pliki i pełne archiwum WZ
-będą wymagały innego rozwiązania (np. zabezpieczony Google Drive).
-ŻADNEGO PŁATNEGO BLAZE ANI KARTY PŁATNICZEJ.
+- Zamówienia: filtr branży **Sanitarna / Budowlana / Elektryczna** (widok pozycji także w zamówieniach mieszanych).
+- W formularzu zapotrzebowania: **wybierz z przedmiaru albo wpisz nazwę ręcznie**. Pojawiają się podpowiedzi podobnych nazw; to sugestie językowe, nie potwierdzenie równoważności technicznej. Użytkownik może wskazać powiązaną pozycję z listy.
+- W tym samym formularzu: **zwykła pozycja / zmiana ilości / nowy materiał lub inne parametry**. Dla zmiany ilości podaje się nową ŁĄCZNĄ ilość, a nie przyrost. Zmiany trafiają do kolejki zaopatrzenie → zarząd i **nie tworzą zamówienia przed akceptacją**. Po akceptacji dodatkowej pozycji należy złożyć jej zamówienie na zatwierdzoną ilość.
+- Dla każdej budowy: **zatowarowanie materiałowe**, rozliczane na podstawie odebranej ilości + ilości potwierdzonej ręcznie jako znajdującej się na budowie przed wdrożeniem, podzielone przez zatwierdzoną ilość (limit 100% na pozycję). Procent budowy to średnia realizacji pozycji, a nie suma jednostek nieporównywalnych (sztuk, mb, m³). Pozycje pominięte nie wchodzą do mianownika. Pozycje bez ustalonej ilości są pokazane osobno i również nie są uwzględniane.
+- Administrator: **Ustaw status / stan** przy każdym materiale (Oczekuje, Realizowana, Zrealizowana ręcznie, Pominięta) i ilość już na budowie, uzasadnienie oraz zapis kto/kiedy.
+- Administrator: **Stan początkowy inwestycji**: szacowane ogólne zaawansowanie (%) i uzasadnienie — to metryka INFORMACYJNA, celowo oddzielona od zatowarowania.
+- Administrator: **Uzupełnij wiele materiałów** według branży/etapu, po świadomym potwierdzeniu, z pominięciem wcześniejszych korekt i konfliktów/RFI. Nie używaj szacunków jako potwierdzonych odbiorów!
+- Zachowano istniejące logowanie Firebase, współdzielone zamówienia, WZ / małe zdjęcia, komentarze @, transport, potwierdzenia przyjazdu, historię i powiadomienia wewnętrzne. Wcześniej uruchomiony skrypt e-mail w Google Apps Script pozostaje osobną usługą; nie trzeba go ponownie instalować.
 
-KROK 1
-Przy obecnym działającym TaskPoint 0.7 pobierz eksport JSON (Ustawienia i eksport).
-Nie usuwaj istniejących dokumentów, nie kasuj bazy ani repozytorium.
+## Krótki test obsady kierowników
 
-KROK 2 — NOWE REGUŁY FIRESTORE
-Firebase Console -> Firestore Database -> Rules.
-Otwórz FIRESTORE-RULES-0.8.txt, skopiuj CAŁĄ zawartość i opublikuj.
-Uwaga: reguły wymagają przetestowania odrębnych kont i statusów na danych testowych.
-Wstrzymaj pracę jeśli Firebase wyświetla błąd uprawnień lub publikacji.
+1. **Użytkownicy**: załóż osobne konta Firebase Authentication i profile `Kierownik budowy` (dla sanitarnego, budowlanego i elektrycznego).
+2. **Budowy → Kierownicy i zastępstwa**: wybierz nazwisko z listy, branżę i typ Kierownik/Zastępstwo. Możesz dodać więcej niż jedną osobę dla tej samej inwestycji oraz więcej niż jednego kierownika jednej branży.
+3. Otwórz budowę i sprawdź listę przypisań. Potem dodaj komentarz do jednoznacznie sanitarnego zamówienia i sprawdź powiadomienia kierownika sanitarnego.
+4. Zastępstwo można ograniczyć datą dla powiadomień, **ale po zakończeniu usuń przypisanie**, żeby odebrać dostęp do Firebase. Kierownicy jednej budowy mają na razie wgląd we wszystkie branże jej danych.
 
-KROK 3 — AKTUALIZUJ PLIKI GITHUB
-Repozytorium: https://github.com/Klaudia399/TaskPoint
-Add file -> Upload files -> wybierz:
- index.html, auth.js, workspace.js, styles.css, sw.js,
- manifest.webmanifest, icon-192.png, icon-512.png
-Kliknij Commit changes. Nie wgrywaj ZIP i pliku reguł do publicznej strony.
+## Aktualizacja na MacBooku
 
-KROK 4 — TESTUJ (najlepiej na kontach testowych)
-1) Najpierw otwórz stronę w incognito: https://klaudia399.github.io/TaskPoint/
-2) Zaloguj jako administrator.
-3) Materiały -> Dodaj / importuj -> wgraj przykładowy XLSX.
-4) Zamówienia -> dodaj 1 pozycję, sprawdź statusy.
-5) Zaznacz Akceptuj i Zamówione u dostawcy.
-6) Magazyn -> z zakładki Zamówienia potwierdź przyjęcie.
-7) Transport -> utwórz zlecenie, wskaż datę i kierowcę, kliknij Wydanie.
-8) Zaloguj jako kierownik -> Transport dotarł -> Potwierdź odbiór.
-9) Dodaj komentarz z @Magazyn, sprawdź odbiorcę w Powiadomienia.
-10) Dodaj testowe zdjęcie w zakładce załączników.
+1. **Zrób eksport JSON** z bieżącej TaskPoint 0.8 (Ustawienia i eksport), jako kopię bezpieczeństwa dostępną ręcznie. Nie kasuj danych Firestore ani repozytorium.
+2. Firebase Console → Firestore Database → Rules. Wklej **całość** pliku `FIRESTORE-RULES-0.9.txt`, kliknij Publish. **Nie pozostawiaj reguł domyślnie otwartych.** Jeśli pojawi się błąd, wstrzymaj aktualizację.
+3. GitHub: istniejące repozytorium `Klaudia399/TaskPoint` → `Add file` → `Upload files` → wgraj z tej paczki **index.html, auth.js, workspace.js, styles.css, sw.js, manifest.webmanifest, icon-192.png, icon-512.png**. Zastąp odpowiadające im pliki, kliknij `Commit changes`.
+4. Sprawdź stronę `https://klaudia399.github.io/TaskPoint/` najpierw w incognito. W zwykłej przeglądarce PWA może potrzebować odświeżenia pamięci Service Worker. Pliku reguł Firebase nie wgrywaj na GitHub.
+5. **Test danych:** na budowie testowej dodaj materiały, ustaw ręczny stan częściowy (np. 7/10 szt.), sprawdź wskaźnik 70%; następnie test statusu Pominięta i zgłoszenie nowego materiału z formularza zamówienia. Sprawdź odczyt na innym urządzeniu.
 
-WAŻNE OGRANICZENIA PILOTAŻU
-- Powiadomienia tylko wewnątrz aplikacji, bez systemowego push.
-- Działania i przesyłanie powiadomień wymagają połączenia internetowego.
-- Firestore nie jest archiwum dużych skanów/zdjęć.
-- Sam kod i reguły nie były przetestowane na rzeczywistym projekcie Firebase.
-- Zanim użyjesz danych firmowych: audyt uprawnień, ilości, duplikatów,
-  transakcyjności, kopii zapasowych i ochrony danych (RODO).
-- Praca offline/synchronizacja konfliktów nie są w pełni obsługiwane.
+## Ograniczenia i ostrożność
+
+- Nadal wymagane: testy realnych uprawnień na kilku kontach, walidacji danych i poprawności procesów przy równoczesnych zapisach. Reguły mogą wymagać poprawek po testach — **nie używaj poufnych danych ani nie traktuj wyniku jako podstawy rozliczeń**.
+- Dane w tej wersji pozostają w Twoim istniejącym projekcie Firebase Spark, w ramach limitów. Nie przechodź na plan Blaze bez decyzji o kosztach.
+- Wskaźnik nie jest procentem finansowego ani robót budowlanych zaawansowania; to postęp listy materiałów. Korekty ręczne nie są dokumentem odbioru. Dla już prowadzonych inwestycji uzupełniaj je na podstawie inwentaryzacji i dokumentów.
+- Lista RFI / ilości zerowe wymaga wyjaśnienia. Szacunek postępu początkowego jest oznaczony inaczej niż zatowarowanie.
+- Powiadomienia aplikacyjne i automatyczna poczta (jeśli skonfigurowana osobno) nadal mają dotychczasowe ograniczenia; systemowych natywnych push z ikoną TaskPoint nie dodano w tej paczce.
+- Pliki WZ/zdjęcia w Firestore są limitowane rozmiarem; większe dokumenty podłączaj bezpiecznym linkiem. GitHub Pages jest publiczny — **nigdy nie wgrywaj do niego haseł ani kluczy kont usługowych**.
