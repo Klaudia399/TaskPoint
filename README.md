@@ -1,4 +1,4 @@
-# TaskPoint BETA 0.9 — aktualizacja pilotażowa
+# TaskPoint BETA 0.9.1 — aktualizacja pilotażowa
 
 **Ta wersja to pilotaż do testów. Nie jest certyfikowanym ani audytowanym produkcyjnym systemem zamówień.**
 
@@ -31,7 +31,7 @@
 ## Aktualizacja na MacBooku
 
 1. **Zrób eksport JSON** z bieżącej TaskPoint 0.8 (Ustawienia i eksport), jako kopię bezpieczeństwa dostępną ręcznie. Nie kasuj danych Firestore ani repozytorium.
-2. Firebase Console → Firestore Database → Rules. Wklej **całość** pliku `FIRESTORE-RULES-0.9.txt`, kliknij Publish. **Nie pozostawiaj reguł domyślnie otwartych.** Jeśli pojawi się błąd, wstrzymaj aktualizację.
+2. Firebase Console → Firestore Database → Rules. Wklej **całość** pliku `FIRESTORE-RULES-0.9.1.txt`, kliknij Publish. **Nie pozostawiaj reguł domyślnie otwartych.** Jeśli pojawi się błąd, wstrzymaj aktualizację.
 3. GitHub: istniejące repozytorium `Klaudia399/TaskPoint` → `Add file` → `Upload files` → wgraj z tej paczki **index.html, auth.js, workspace.js, styles.css, sw.js, manifest.webmanifest, icon-192.png, icon-512.png**. Zastąp odpowiadające im pliki, kliknij `Commit changes`.
 4. Sprawdź stronę `https://klaudia399.github.io/TaskPoint/` najpierw w incognito. W zwykłej przeglądarce PWA może potrzebować odświeżenia pamięci Service Worker. Pliku reguł Firebase nie wgrywaj na GitHub.
 5. **Test danych:** na budowie testowej dodaj materiały, ustaw ręczny stan częściowy (np. 7/10 szt.), sprawdź wskaźnik 70%; następnie test statusu Pominięta i zgłoszenie nowego materiału z formularza zamówienia. Sprawdź odczyt na innym urządzeniu.
@@ -44,3 +44,22 @@
 - Lista RFI / ilości zerowe wymaga wyjaśnienia. Szacunek postępu początkowego jest oznaczony inaczej niż zatowarowanie.
 - Powiadomienia aplikacyjne i automatyczna poczta (jeśli skonfigurowana osobno) nadal mają dotychczasowe ograniczenia; systemowych natywnych push z ikoną TaskPoint nie dodano w tej paczce.
 - Pliki WZ/zdjęcia w Firestore są limitowane rozmiarem; większe dokumenty podłączaj bezpiecznym linkiem. GitHub Pages jest publiczny — **nigdy nie wgrywaj do niego haseł ani kluczy kont usługowych**.
+
+
+## Nowość 0.9.1 — baza dostawców
+
+- Nowa zakładka **Dostawcy** dla administratora, zaopatrzeniowca oraz zarządu (zarząd tylko odczyt).
+- Kartoteka wspólna dla wszystkich budów: nazwa firmy, NIP, branża, miejscowość, osoba kontaktowa, telefon, e-mail, uwagi.
+- W szczegółach zamówienia na pozycji **Zaakceptowane** kliknij **Zamówione u dostawcy**. Wybierz istniejącą firmę lub opcję **Dodaj nową firmę**.
+- W tej samej operacji zapisywany jest dostawca (jeśli nowy) i przypisanie go do pozycji zamówienia, numer zamówienia u dostawcy i deklarowany termin dostawy.
+- Jedno zamówienie może obejmować pozycje kupione u różnych dostawców; snapshot nazwy i NIP pozostanie na pozycji zamówienia także po późniejszej zmianie kartoteki.
+- Uwaga: jest to wersja **BETA**. Zanim użyjesz realnych danych firmowych, przetestuj reguły dostępu, bezpieczeństwo edycji zamówień i tworzenie dostawców na osobnych kontach. Nie wpisuj jeszcze poufnych cen i warunków handlowych.
+- Bazę dostawców można wyeksportować w pliku JSON przez Ustawienia i eksport (role z dostępem).
+- Import dostawców z Excela oraz automatyczna identyfikacja istniejących dostawców to odrębny, przyszły moduł.
+
+### Instalacja aktualizacji
+1. Zachowaj kopię eksportu danych w BETA 0.9.
+2. W Firebase wklej nowy plik **FIRESTORE-RULES-0.9.1.txt** i kliknij Publish.
+3. Na GitHubie wgraj osiem plików aplikacji (index.html, auth.js, workspace.js, styles.css, sw.js, manifest.webmanifest, icon-192.png, icon-512.png), zastępując dotychczasowe.
+4. Po wdrożeniu sprawdź w incognito: widoczność Dostawców, dodanie nowej firmy i zakup pozycji u dostawcy.
+5. Dane starych zamówień pozostają w bazie, bez uzupełnionych dostawców; uzupełniamy ich przy nowych zakupach.

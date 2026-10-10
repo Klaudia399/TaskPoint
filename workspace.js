@@ -13,8 +13,8 @@ export function mountWorkspace({db:firestore,user,profile}) {
   const staff=role!=='kierownik';
   const labels={admin:'Administrator',kierownik:'Kierownik budowy',zaopatrzenie:'Zaopatrzeniowiec',magazyn:'Magazyn',dyrektor:'Dyrektor',prezes:'Prezes'};
   const kinds={oczekuje_zaop:'Weryfikacja zaopatrzenia',oczekuje_zarzad:'Do akceptacji zarządu',zatwierdzona:'Zatwierdzona',odrzucona:'Odrzucona',zgloszone:'Zgłoszone',zaakceptowane:'Zaakceptowane',zamowione:'Zamówione u dostawcy',magazyn_czesciowo:'Częściowo w magazynie',magazyn_przyjete:'Przyjęte w magazynie',zaplanowany:'Transport zaplanowany',wydany:'W transporcie',dotarl:'Transport dotarł',odebrany:'Odebrane',czesciowy:'Odbiór częściowy'};
-  const nav=[['dashboard','⌂','Pulpit'],['projects','▥','Budowy'],['materials','▤','Materiały'],['orders','▣','Zamówienia'],['changes','✓','Akceptacje'],['transport','🚚','Transport'],['stock','▦','Magazyn'],['docs','▧','Dokumenty'],['notifications','🔔','Powiadomienia'],...(admin?[['users','♙','Użytkownicy']]:[])];
-  let current='dashboard',selected='all',activity='all',branchFilter='all',projectUnsubs=new Map(),usersUnsub=null,projects=[],personnel=[],notices=[],noticeError='',live=false;
+  const nav=[['dashboard','⌂','Pulpit'],['projects','▥','Budowy'],['materials','▤','Materiały'],['orders','▣','Zamówienia'],['changes','✓','Akceptacje'],['transport','🚚','Transport'],['stock','▦','Magazyn'],['docs','▧','Dokumenty'],['notifications','🔔','Powiadomienia'],...((buyer||boss)?[['suppliers','🏢','Dostawcy']]:[]),...(admin?[['users','♙','Użytkownicy']]:[])];
+  let current='dashboard',selected='all',activity='all',branchFilter='all',projectUnsubs=new Map(),usersUnsub=null,suppliersUnsub=null,projects=[],personnel=[],suppliers=[],notices=[],noticeError='',live=false;
   let bucket=new Map();
   const $=id=>document.getElementById(id);
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -80,6 +80,7 @@ export function mountWorkspace({db:firestore,user,profile}) {
       $('connection-label').textContent='Synchronizacja włączona';render();
     },err=>{noticeError=`Nie udało się wczytać listy budów: ${err.code||err.message}`;$('connection-label').textContent='Błąd dostępu';render()});
     if(true){usersUnsub=onSnapshot(collection(firestore,'users'),snap=>{personnel=snap.docs.map(x=>({uid:x.id,...x.data()}));render()},err=>{noticeError=`Nie udało się wczytać użytkowników: ${err.code||err.message}`;render()})}
+    if(buyer||boss){suppliersUnsub=onSnapshot(collection(firestore,'suppliers'),snap=>{suppliers=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pl'));render()},err=>{console.warn('Dostawcy:',err.code||err.message);toast('Nie udało się wczytać dostawców. Sprawdź nowe reguły Firestore.');})}
     onSnapshot(collection(firestore,'users',user.uid,'notifications'),snap=>{notices=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));render()},err=>{console.warn('Powiadomienia:',err.code||err.message)});
   }
 
@@ -88,7 +89,7 @@ export function mountWorkspace({db:firestore,user,profile}) {
     $('side-nav').innerHTML=nav.map(([id,icon,name])=>`<button data-tab="${id}" class="${id===current?'active':''}"><span class="nav-icon">${icon}</span>${name}</button>`).join('');
     const mobile=['dashboard','projects','orders','changes','transport','notifications'];
     $('mobile-nav').innerHTML=nav.filter(([id])=>mobile.includes(id)).map(([id,icon,name])=>`<button data-tab="${id}" class="${id===current?'active':''}"><b>${icon}</b>${name}</button>`).join('');
-    const handler={dashboard,projects:pageProjects,materials:pageMaterials,orders:pageOrders,changes:pageChanges,transport:pageTransport,stock:pageStock,docs:pageDocs,notifications:pageNotifications,users:pageUsers,settings:pageSettings}[current]||dashboard;
+    const handler={dashboard,projects:pageProjects,materials:pageMaterials,orders:pageOrders,changes:pageChanges,transport:pageTransport,stock:pageStock,docs:pageDocs,notifications:pageNotifications,suppliers:pageSuppliers,users:pageUsers,settings:pageSettings}[current]||dashboard;
     const bell=notices.filter(x=>!x.readAt).length; const navBell=[...document.querySelectorAll('[data-tab=notifications]')];navBell.forEach(b=>{if(bell)b.title=bell+' nowych powiadomień';b.innerHTML=b.innerHTML.replace(/<span class="tp-ncount">.*?<\/span>/g,'')+(bell?`<span class="tp-ncount">${bell>99?'99+':bell}</span>`:'')});
     $('page').innerHTML=(noticeError?`<div class="warn-banner">${esc(noticeError)}</div>`:'')+(live?handler():blank('Łączenie ze wspólną bazą Firebase…'));
   }
@@ -176,6 +177,41 @@ export function mountWorkspace({db:firestore,user,profile}) {
     return section('Transport materiałów','Przyjazd i odbiór to dwa osobne potwierdzenia. Dostawy częściowe pozostają w historii.',warehouse?btn('new-transport','＋ Zaplanuj transport','','','primary'):'')+projectFilter()+activeSelect()+`<div class="card-list">${data.map(s=>`<div class="item-card"><div class="item-top"><div><div class="item-name">${esc(s.material)} — ${n(s.qty)} ${esc(s.unit)}</div><div class="item-sub">${esc(prName(s.projectId))} · Kierowca: ${esc(s.driver)}</div></div>${vstatus(s.status)}</div><div class="item-detail"><span>Wywóz: ${fmt(s.plannedDate)}</span><span>Dostawa: ${fmt(s.deliveryDate)}</span><span>${esc(s.from)} → ${esc(s.destination)}</span>${s.arrivedAt?`<span>Przyjazd: ${fmtFull(s.arrivedServerAt||s.arrivedAt)}</span>`:''}</div><div class="item-foot">${btn('shipment-detail','Szczegóły / zdjęcia / komentarze',s.projectId,s.id)}<div class="row-actions">${warehouse&&s.status==='zaplanowany'?btn('dispatch','Potwierdź wydanie',s.projectId,s.id,'primary'):''}${manager&&s.status==='wydany'?btn('arrive','Transport dotarł',s.projectId,s.id,'primary'):''}${manager&&s.status==='dotarl'?btn('receive-form','Potwierdź ilość',s.projectId,s.id,'green'):''}</div></div></div>`).join('')||blank('Brak transportów w tym widoku.')}</div>`}
   function pageStock(){const rows=withP(list('stock'));return section('Magazyn','Przyjęcia na stan — testowy rejestr, jeszcze nie pełna ewidencja ERP.',warehouse?btn('new-stock','＋ Przyjęcie na stan','','','primary'):'')+projectFilter()+`<div class="table-card"><table><thead><tr><th>Materiał</th><th>Budowa</th><th>Ilość</th><th>Data</th><th>Uwagi</th></tr></thead><tbody>${rows.map(s=>`<tr><td><strong>${esc(s.material)}</strong></td><td>${esc(prName(s.projectId))}</td><td>${n(s.qty)} ${esc(s.unit)}</td><td>${fmtFull(s.serverAt||s.createdAt||s.date)}</td><td>${esc(s.note)} ${btn('stock-detail','Załączniki',s.projectId,s.id)}</td></tr>`).join('')}</tbody></table></div>${rows.length?'':blank('Brak przyjęć magazynowych.')}`}
   function pageDocs(){return section('Dokumentacja i zdjęcia','Zdjęcia, WZ, PDF i linki do dokumentów przy zamówieniach, transporcie i magazynie.')+`<div class="card"><h2>Dokumenty przypisane do etapu</h2><p>Otwórz zamówienie, transport albo przyjęcie magazynowe i kliknij <b>Dodaj zdjęcie / WZ</b>. Zdjęcia są pomniejszane przed zapisem. Małe PDF do 120 KB mogą być dodane bezpośrednio.</p><p>Większe dokumenty można podłączyć jako link, np. do odpowiednio zabezpieczonego Google Drive. Udostępnienie linku zależy od praw dostępu na Dysku.</p><p class="helper">To funkcja pilotażowa. Oryginały WZ przechowuj w firmowym archiwum. Firestore nie zastępuje magazynu dokumentów.</p></div>`}
+  function pageSuppliers(){
+    if(!(buyer||boss))return blank('Brak dostępu do bazy dostawców.');
+    const activeSup=suppliers.filter(x=>x.active!==false);
+    return section('Baza dostawców','Wspólna kartoteka firm — wybierz dostawcę przy zamawianiu materiałów.',buyer?btn('new-supplier','＋ Nowy dostawca','','','primary'):'')+
+      `<div class="card"><div class="v7-bar"><span class="meta">Firmy: ${suppliers.length} · aktywne: ${activeSup.length}</span></div><div class="v7-table-scroll"><table><thead><tr><th>Dostawca</th><th>NIP</th><th>Branża</th><th>Kontakt</th><th>Status</th><th></th></tr></thead><tbody>${suppliers.map(v=>`<tr><td><strong>${esc(v.name)}</strong><div class="meta">${esc(v.city||'')}${v.contactPerson?' · '+esc(v.contactPerson):''}</div></td><td>${esc(v.nip||'—')}</td><td>${esc(branchName(v.branch))}</td><td>${v.phone?`<div>${esc(v.phone)}</div>`:''}${v.email?`<div>${esc(v.email)}</div>`:''}</td><td>${v.active===false?'Nieaktywny':'Aktywny'}</td><td>${buyer?btn('supplier-detail','Edytuj','',''+v.id):''}</td></tr>`).join('')}</tbody></table></div>${suppliers.length?'':blank('Brak firm. Dodaj pierwszego dostawcę.')}</div>`;
+  }
+  function supplierOptions(selectedId='',includeNew=true){
+    return `<option value="">Wybierz dostawcę</option>`+suppliers.filter(v=>v.active!==false).map(v=>`<option value="${esc(v.id)}" ${selectedId===v.id?'selected':''}>${esc(v.name)}${v.nip?' · NIP '+esc(v.nip):''}</option>`).join('')+(includeNew?'<option value="__new__">＋ Dodaj nową firmę</option>':'');
+  }
+  const nipClean=(value)=>String(value||'').replace(/[^0-9]/g,'');
+  function nipValid(value){if(!value)return true;if(!/^\d{10}$/.test(value))return false;const w=[6,5,7,2,3,4,5,6,7];const sum=w.reduce((acc,x,i)=>acc+x*Number(value[i]),0)%11;return sum!==10&&sum===Number(value[9]);}
+  function supplierData(f){
+    const name=String(f.name||f.newSupplierName||'').trim().slice(0,160);
+    const nip=nipClean(f.nip||f.newSupplierNip);
+    const branch=String(f.branch||f.newSupplierBranch||'budowlana');
+    if(name.length<2)throw Error('Podaj nazwę firmy (minimum 2 znaki).');
+    if(!nipValid(nip))throw Error('Podany NIP jest nieprawidłowy. Sprawdź 10 cyfr i sumę kontrolną.');
+    if(!['sanitarna','budowlana','elektryczna'].includes(branch))throw Error('Wybierz branżę dostawcy.');
+    return {name,nip,branch,city:String(f.city||f.newSupplierCity||'').trim().slice(0,120),phone:String(f.phone||f.newSupplierPhone||'').trim().slice(0,40),email:String(f.email||f.newSupplierEmail||'').trim().slice(0,140),contactPerson:String(f.contactPerson||'').trim().slice(0,100),notes:String(f.notes||'').trim().slice(0,800)};
+  }
+  const optionalF=(...args)=>f(...args).replace(/ required(?=[ >])/,'');
+  function supplierForm(id=''){
+    if(!buyer)return;
+    const v=suppliers.find(x=>x.id===id)||{};
+    modal(id?'Dane dostawcy':'Dodaj firmę do bazy',`<form id="supplier-form" class="form-grid" data-id="${esc(id)}">${f('name','Nazwa firmy',v.name||'','text','maxlength="160"')}${optionalF('nip','NIP (opcjonalnie)',v.nip||'','text','maxlength="18" pattern="[0-9 -]*"')}<div class="field"><label>Branża</label><select name="branch">${opt(branches.slice(1),v.branch||'budowlana')}</select></div>${optionalF('city','Miasto / miejscowość',v.city||'','text','maxlength="120"')}${optionalF('contactPerson','Osoba kontaktowa',v.contactPerson||'','text','maxlength="100"')}${optionalF('phone','Telefon',v.phone||'','tel','maxlength="40"')}${optionalF('email','E-mail',v.email||'','email','maxlength="140"')}<div class="field full"><label>Uwagi / warunki współpracy</label><textarea name="notes" maxlength="800">${esc(v.notes||'')}</textarea></div>${id&&admin?`<div class="field"><label>Aktywność</label><select name="active">${opt([['true','Aktywny'],['false','Nieaktywny']],String(v.active!==false))}</select></div>`:''}<div class="field full"><button class="btn primary" type="submit">${id?'Zapisz zmiany':'Dodaj dostawcę'}</button></div></form><p class="helper">Wersja testowa. Nie wpisuj jeszcze poufnych warunków handlowych.</p>`);
+  }
+  function purchaseForm(pid,compoundId){
+    if(!buyer)return;
+    const [oid,iid]=compoundId.split('|'),o=order(pid,oid),i=o?.items.find(x=>x.id===iid);
+    if(!i||i.status!=='zaakceptowane')throw Error('Pozycja musi mieć status „Zaakceptowane”.');
+    const defaultId=suppliers.find(v=>v.active!==false)?.id||'__new__';
+    modal('Zakup materiału u dostawcy',`<p><b>${esc(i.name)}</b> — ${n(i.qty)} ${esc(i.unit)} · ${esc(prName(pid))}</p><form id="purchase-form" data-pid="${esc(pid)}" data-id="${esc(compoundId)}" class="form-grid"><div class="field full"><label>Firma dostawcy *</label><select name="supplierId" id="tp-purchase-supplier" required>${supplierOptions(defaultId)}</select></div><div id="tp-purchase-new" class="field full"><div class="card"><h3>Nowy dostawca</h3>${optionalF('newSupplierName','Nazwa firmy','','text','maxlength="160"')}${optionalF('newSupplierNip','NIP (opcjonalnie)','','text','maxlength="18"')}${optionalF('newSupplierCity','Miejscowość','','text','maxlength="120"')}${optionalF('newSupplierPhone','Telefon','','tel','maxlength="40"')}${optionalF('newSupplierEmail','E-mail','','email','maxlength="140"')}<div class="field"><label>Branża</label><select name="newSupplierBranch">${opt(branches.slice(1),branchOf(i))}</select></div></div></div>${optionalF('purchaseReference','Numer zamówienia u dostawcy (opcjonalnie)','','text','maxlength="100"')}${optionalF('expectedSupplierDate','Termin deklarowany przez dostawcę','','date')}${optionalF('unitPriceNet','Cena jednostkowa netto (opcjonalnie)','','number','min="0" step="0.01"')}<div class="field full"><button type="submit" class="btn primary">Oznacz jako zamówione u dostawcy</button></div></form>`);
+    const select=$('tp-purchase-supplier');select.value=defaultId;const box=$('tp-purchase-new');if(box)box.hidden=defaultId!=='__new__';
+  }
+
   function pageUsers(){if(!admin)return blank('Tylko administrator zarządza profilami.');return section('Konta i uprawnienia','Najpierw utwórz konto w Firebase Authentication → Users, potem dodaj jego UID tutaj.',btn('new-user','＋ Dodaj profil użytkownika','','','primary'))+`<div class="card"><div class="v7-list">${personnel.map(u=>`<div class="v7-flex"><div><b>${esc(u.name||u.uid)}</b><div class="meta">${esc(u.uid)} · ${esc(labels[u.role]||u.role)} · ${u.active?'Aktywny':'Nieaktywny'}</div></div>${btn('user-detail','Edytuj profil','',u.uid)}</div>`).join('')||blank('Nie ma jeszcze profili')}</div></div>`}
   function pageSettings(){return section('Ustawienia i eksport','Zachowaj kopię testowych danych i monitoruj limity darmowego planu.')+`<div class="grid2"><div class="card"><h2>Eksport danych</h2><p>Możesz pobrać kopię bieżących danych, do których masz dostęp. Plik JSON pozostanie na Twoim urządzeniu.</p>${btn('export','Pobierz eksport JSON','','','primary')}</div><div class="card"><h2>Stan wdrożenia</h2><p class="small">Wersja 0.7 używa Firestore dla budów, materiałów, zamówień, zatwierdzeń, magazynu i transportów. Nie importuje historii z localStorage.</p><p class="small">Brak systemowych powiadomień push, wgrywania zdjęć i plików WZ, rozliczeń finansowych oraz automatycznych kopii zapasowych.</p></div></div>`}
 
@@ -216,7 +252,7 @@ export function mountWorkspace({db:firestore,user,profile}) {
   function comments(pid,targetType,targetId){const all=(bucket.get(pid)?.comments||[]).filter(x=>x.targetType===targetType&&x.targetId===targetId).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));
     const people=activePeople().filter(p=>p.uid!==user.uid&&(p.role!=='kierownik'||(mineProject(pid)?.memberUids||[]).includes(p.uid)));
     return `<div class="comments"><h3>Komentarze</h3>${all.map(c=>`<div class="comment">${esc(c.text)}<small>${esc(c.author)} · ${fmtFull(c.serverAt||c.createdAt)}</small></div>`).join('')||'<p class="helper">Brak komentarzy.</p>'}<form id="comment-form" data-pid="${esc(pid)}" data-target="${esc(targetType)}" data-id="${esc(targetId)}"><div class="field"><label>Nowy komentarz (możesz wpisać @Magazyn, @Kierownik itd.)</label><textarea name="text" maxlength="1500" required placeholder="Np. @Magazyn Czy dostawa może przyjechać wcześniej?"></textarea></div><div class="field"><label>Oznacz konkretną osobę @</label><select name="mentionUid"><option value="">Bez dodatkowego oznaczenia</option>${opt(people.map(p=>[p.uid,p.name||p.uid+' — '+(labels[p.role]||p.role)]))}</select></div><p class="helper">Komentarz zarządu automatycznie powiadomi kierownika budowy i zaopatrzenie. Oznaczeni otrzymują osobne powiadomienie.</p><button class="btn primary" type="submit">Dodaj komentarz i powiadom</button></form></div>`}
-  function orderDetail(pid,id){const o=order(pid,id);if(!o)return;modal('Zamówienie '+(o.reference||id),`<p class="small">${esc(prName(pid))} · ${esc(o.createdBy)} · ${fmtFull(o.serverAt||o.createdAt)}</p><p>${esc(o.notes||'')}</p><div class="v7-table-scroll"><table><thead><tr><th>Materiał</th><th>Ilość</th><th>Termin</th><th>Priorytet</th><th>Dostawa</th><th>Status / działanie</th></tr></thead><tbody>${o.items.map(i=>`<tr><td><strong>${esc(i.name)}</strong><div class="meta">${branchName(branchOf(i))}${i.requestedName?" · Wpisano: "+esc(i.requestedName):""}</div><p>${btn('attachments-open','📷 WZ / zdjęcie',pid,`orderItem|${o.id}|${i.id}`)}</p></td><td>${n(i.qty)} ${esc(i.unit)}</td><td>${fmt(i.due)}</td><td>${esc(i.priority)}</td><td>${esc(i.delivery)}</td><td>${vstatus(i.status||'zgloszone')}<div class="tp-actions">${buyer&&i.status==='zgloszone'?btn('accept-order','Akceptuj',pid,o.id+'|'+i.id,'primary'):''}${buyer&&i.status==='zaakceptowane'?btn('mark-ordered','Zamówione u dostawcy',pid,o.id+'|'+i.id,'primary'):''}${warehouse&&['zamowione','magazyn_czesciowo'].includes(i.status)?btn('warehouse-receive','Przyjęcie do magazynu',pid,o.id+'|'+i.id,'primary'):''}</div></td></tr>`).join('')}</tbody></table></div>${comments(pid,'order',id)}${history(pid,'order',id)}`)}
+  function orderDetail(pid,id){const o=order(pid,id);if(!o)return;modal('Zamówienie '+(o.reference||id),`<p class="small">${esc(prName(pid))} · ${esc(o.createdBy)} · ${fmtFull(o.serverAt||o.createdAt)}</p><p>${esc(o.notes||'')}</p><div class="v7-table-scroll"><table><thead><tr><th>Materiał</th><th>Ilość</th><th>Termin</th><th>Priorytet</th><th>Dostawa</th><th>Status / działanie</th></tr></thead><tbody>${o.items.map(i=>`<tr><td><strong>${esc(i.name)}</strong><div class="meta">${branchName(branchOf(i))}${i.requestedName?" · Wpisano: "+esc(i.requestedName):""}${i.supplierName?" · Dostawca: "+esc(i.supplierName):""}${i.purchaseReference?" · Zamówienie: "+esc(i.purchaseReference):""}${i.expectedSupplierDate?" · Termin dostawcy: "+fmt(i.expectedSupplierDate):""}</div><p>${btn('attachments-open','📷 WZ / zdjęcie',pid,`orderItem|${o.id}|${i.id}`)}</p></td><td>${n(i.qty)} ${esc(i.unit)}</td><td>${fmt(i.due)}</td><td>${esc(i.priority)}</td><td>${esc(i.delivery)}</td><td>${vstatus(i.status||'zgloszone')}<div class="tp-actions">${buyer&&i.status==='zgloszone'?btn('accept-order','Akceptuj',pid,o.id+'|'+i.id,'primary'):''}${buyer&&i.status==='zaakceptowane'?btn('purchase-open','Zamówione u dostawcy',pid,o.id+'|'+i.id,'primary'):''}${warehouse&&['zamowione','magazyn_czesciowo'].includes(i.status)?btn('warehouse-receive','Przyjęcie do magazynu',pid,o.id+'|'+i.id,'primary'):''}</div></td></tr>`).join('')}</tbody></table></div>${comments(pid,'order',id)}${history(pid,'order',id)}`)}
   function changeDetail(pid,id){const c=change(pid,id);if(!c)return;modal('Zmiana materiałowa',`<p><strong>${esc(c.kind==='new'?c.newName:(mat(pid,c.materialId)?.name||'Materiał'))}</strong> · ${esc(prName(pid))}</p>${vstatus(c.status)}<p>Wnioskowano: <b>${n(c.newQty)} ${esc(c.unit)}</b>; poprzednio: ${n(c.oldQty)}</p><p>${esc(c.reason)}</p>${c.approvedBy?`<p class="small">Decyzja: ${esc(c.approvedBy)} · ${fmtFull(c.decidedServerAt||c.decidedAt)}</p>`:''}${btn('attachments-open','📷 Zdjęcia / dokumenty',pid,`change|${id}`)}${comments(pid,'change',id)}${history(pid,'change',id)}`)}
   function shipmentDetail(pid,id){const s=shipment(pid,id);if(!s)return;modal('Transport materiałów',`<p><b>${esc(s.material)} — ${n(s.qty)} ${esc(s.unit)}</b></p>${vstatus(s.status)}<p class="small">Kierowca: ${esc(s.driver)}<br>Załadunek: ${esc(s.from)}<br>Dostawa: ${esc(s.destination)}<br>Wywóz: ${fmt(s.plannedDate)}<br>Termin dostawy: ${fmt(s.deliveryDate)}<br>${s.dispatchedAt?'Wydanie: '+fmtFull(s.dispatchedServerAt||s.dispatchedAt)+'<br>':''}${s.arrivedAt?'Przyjazd: '+fmtFull(s.arrivedServerAt||s.arrivedAt)+'<br>':''}${s.receivedAt?'Odbiór: '+fmtFull(s.receivedServerAt||s.receivedAt):''}</p><p>${esc(s.notes||'')}</p>${s.receivedAt?`<p><b>Odebrano: ${n(s.receivedQty??s.qty)} ${esc(s.unit)}</b> · ${esc(s.discrepancy||'')}</p>`:''}${manager&&s.status==='wydany'?btn('arrive','Potwierdź przyjazd transportu',pid,id,'primary'):''}${manager&&s.status==='dotarl'?btn('receive-form','Odbiór i ilość faktyczna',pid,id,'green'):''}<div style="margin-top:15px">${btn('attachments-open','📷 WZ / załadunek / składowanie',pid,`transport|${id}`)}</div>${comments(pid,'transport',id)}${history(pid,'transport',id)}`)}
   function stockDetail(pid,id){const item=(bucket.get(pid)?.stock||[]).find(x=>x.id===id);if(!item)return;modal('Przyjęcie magazynowe',`<p><strong>${esc(item.material)}</strong> ${n(item.qty)} ${esc(item.unit)}</p><p>Data: ${fmtFull(item.serverAt||item.createdAt||item.date)}</p>${btn('attachments-open','📷 Zdjęcia przyjęcia / miejsce składowania',pid,'stock|'+id)}`)}
@@ -232,7 +268,44 @@ export function mountWorkspace({db:firestore,user,profile}) {
   function userDetail(uid){const p=personnel.find(x=>x.uid===uid);if(!p)return;modal('Edytuj profil',`<p class="small">UID: ${esc(uid)}</p><form id="user-edit-form" data-uid="${esc(uid)}" class="form-grid">${f('name','Imię i nazwisko',p.name||'','','maxlength="100"')}<div class="field"><label>Rola</label><select name="role">${opt(Object.entries(labels),p.role)}</select></div><div class="field"><label>Konto</label><select name="active">${opt([['true','Aktywne'],['false','Zablokowane']],String(p.active))}</select></div><div class="field full"><button class="btn primary" type="submit">Zapisz profil</button></div></form>`)}
 
   async function submitForm(form){const fdata=new FormData(form),f=Object.fromEntries(fdata.entries()),pid=f.projectId,nowAt=now();
-    if(form.id==='project-baseline-form'){
+    if(form.id==='supplier-form'){
+      if(!buyer)throw Error('Tylko zaopatrzenie i administrator mogą edytować dostawców.');
+      const data=supplierData(f),id=form.dataset.id;
+      if(!id){
+        if(data.nip&&suppliers.some(s=>s.nip===data.nip))throw Error('Firma o takim NIP jest już w bazie. Wybierz istniejącą kartotekę.');
+        if(!data.nip&&suppliers.some(s=>cleanName(s.name)===cleanName(data.name)))throw Error('Firma o takiej nazwie jest już w bazie.');
+        const ref=doc(collection(firestore,'suppliers'));
+        await setDoc(ref,{...data,active:true,createdByUid:user.uid,createdAt:nowAt,serverAt:serverTimestamp()});
+      }else{
+        const old=suppliers.find(v=>v.id===id);if(!old)throw Error('Nie znaleziono dostawcy.');
+        if(data.nip&&suppliers.some(v=>v.id!==id&&v.nip===data.nip))throw Error('NIP jest już przypisany do innej firmy.');
+        const patch={...data,updatedAt:nowAt,updatedByUid:user.uid};if(admin&&f.active)patch.active=f.active==='true';
+        await updateDoc(doc(firestore,'suppliers',id),patch);
+      }
+    }else if(form.id==='purchase-form'){
+      if(!buyer)throw Error('Brak uprawnień do zakupów.');
+      const [oid,iid]=form.dataset.id.split('|'),target=form.dataset.pid;
+      const ref=entityDoc(target,'orders',oid),supplierId=f.supplierId;
+      if(!supplierId)throw Error('Wybierz dostawcę lub dodaj nowego.');
+      if(f.expectedSupplierDate&&!/^\d{4}-\d{2}-\d{2}$/.test(f.expectedSupplierDate))throw Error('Nieprawidłowa data dostawy.');
+      const unitPrice=f.unitPriceNet===''?null:Number(f.unitPriceNet);
+      if(unitPrice!==null&&(!Number.isFinite(unitPrice)||unitPrice<0))throw Error('Cena musi być nieujemna.');
+      const newData=supplierId==='__new__'?supplierData(f):null;
+      const chosen=supplierId==='__new__'?null:suppliers.find(v=>v.id===supplierId&&v.active!==false);
+      if(!newData&&!chosen)throw Error('Wybierz aktywną firmę z bazy.');
+      if(newData&&newData.nip&&suppliers.some(v=>v.nip===newData.nip))throw Error('Firma z takim NIP już istnieje. Wybierz ją z listy.');
+      if(newData&&!newData.nip&&suppliers.some(v=>cleanName(v.name)===cleanName(newData.name)))throw Error('Firma o tej nazwie już istnieje.');
+      const newRef=newData?doc(collection(firestore,'suppliers')):null;
+      await runTransaction(firestore,async tx=>{
+        const snap=await tx.get(ref);if(!snap.exists())throw Error('Nie znaleziono zamówienia.');
+        const entry=snap.data().items.find(i=>i.id===iid);if(!entry||entry.status!=='zaakceptowane')throw Error('Pozycja jest już realizowana lub ma inny status.');
+        const supplier={supplierId:newData?newRef.id:chosen.id,supplierName:newData?newData.name:chosen.name,supplierNip:newData?newData.nip:chosen.nip||'',purchaseReference:String(f.purchaseReference||'').trim().slice(0,100),expectedSupplierDate:f.expectedSupplierDate||'',unitPriceNet:unitPrice};
+        if(newData)tx.set(newRef,{...newData,active:true,createdByUid:user.uid,createdAt:nowAt,serverAt:serverTimestamp()});
+        const items=snap.data().items.map(i=>i.id===iid?{...i,...supplier,status:'zamowione',orderedAt:nowAt,orderedByUid:user.uid}:i);
+        tx.update(ref,{items,updatedAt:nowAt,updatedByUid:user.uid});
+      });
+      try{await logAndNotify(target,'status','order',oid,`Zakup od firmy ${newData?.name||chosen?.name} · ${String(f.purchaseReference||'').trim().slice(0,60)}`,recipients(target,'transport',[],branchOf(order(target,oid)?.items.find(i=>i.id===iid)||{})))}catch(e){notifyFailure(e)}
+    }else if(form.id==='project-baseline-form'){
       if(!admin)throw Error('Tylko administrator może ustawić stan początkowy.');const val=Number(f.baselineEstimatePct);if(!Number.isFinite(val)||val<0||val>100||!String(f.reason||'').trim())throw Error('Podaj procent 0–100 i uzasadnienie.');await updateDoc(pidDoc(form.dataset.pid),{baselineEstimatePct:val,baselineEstimateReason:String(f.reason).trim().slice(0,800),baselineEstimateByUid:user.uid,baselineEstimateAt:serverTimestamp(),updatedAt:nowAt});
     }else if(form.id==='bulk-baseline-form'){
       if(!admin)throw Error('Brak uprawnień.');if(String(f.confirm).trim()!=='POTWIERDZAM')throw Error('Wpisz POTWIERDZAM.');if(!String(f.reason||'').trim())throw Error('Podaj uzasadnienie.');
@@ -378,7 +451,7 @@ export function mountWorkspace({db:firestore,user,profile}) {
     }
     close();toast('Zapisano zmianę statusu.');render();
   }
-  function download(){const data={exportedAt:now(),role,projects,materials:list('materials'),orders:list('orders'),changes:list('changes'),shipments:list('shipments'),stock:list('stock'),comments:list('comments'),events:list('events')};const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const anchor=document.createElement('a');anchor.href=url;anchor.download=`TaskPoint-eksport-${today()}.json`;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+  function download(){const data={exportedAt:now(),role,projects,materials:list('materials'),orders:list('orders'),changes:list('changes'),shipments:list('shipments'),stock:list('stock'),comments:list('comments'),events:list('events'),suppliers:(buyer||boss)?suppliers:[]};const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const anchor=document.createElement('a');anchor.href=url;anchor.download=`TaskPoint-eksport-${today()}.json`;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1500)}
 
   document.addEventListener('click',async e=>{
     const el=e.target.closest('[data-tab],[data-action]');if(!el)return;
@@ -406,6 +479,9 @@ export function mountWorkspace({db:firestore,user,profile}) {
       if(a==='new-transport')return shipmentForm();
       if(a==='new-stock')return stockForm();
       if(a==='new-user')return profileForm();
+      if(a==='new-supplier')return supplierForm();
+      if(a==='supplier-detail')return supplierForm(id);
+      if(a==='purchase-open')return purchaseForm(pid,id);
       if(a==='user-detail')return userDetail(id);
       if(a==='order-detail')return orderDetail(pid,id);
       if(a==='change-detail')return changeDetail(pid,id);
@@ -428,6 +504,7 @@ export function mountWorkspace({db:firestore,user,profile}) {
     if(e.target.id==='project-filter'){selected=e.target.value;render();return}
     if(e.target.id==='activity-filter'){activity=e.target.value;render();return}
     if(e.target.id==='branch-filter'){branchFilter=e.target.value;render();return}
+    if(e.target.id==='tp-purchase-supplier'){const node=$('tp-purchase-new');if(node)node.hidden=e.target.value!=='__new__';return}
     if(e.target.id==='excel-file'){const el=e.target;const preview=$('excel-preview');if(preview)preview.textContent=el.files[0]?`Wybrano plik: ${el.files[0].name}. Po kliknięciu Importuj rozpoznamy kolumny i sprawdzimy duplikaty.`:'';return}
     if(e.target.id==='f-project'){
       const pid=e.target.value;
