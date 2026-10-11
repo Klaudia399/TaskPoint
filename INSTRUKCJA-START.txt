@@ -1,10 +1,10 @@
-TaskPoint BETA 0.9.5
+TaskPoint BETA 0.9.6
 
-1. Zrób eksport JSON ze starej aplikacji.
-2. Firebase -> Firestore Database -> Rules: opublikuj FIRESTORE-RULES-0.9.5.txt.
-3. GitHub -> istniejące repozytorium TaskPoint -> Add file -> Upload files.
-4. Wgraj: index.html, auth.js, workspace.js, styles.css, sw.js, manifest.webmanifest, icon-192.png, icon-512.png. Commit changes.
-5. Testuj w oknie incognito: Budowy -> Edytuj dane -> Archiwizuj -> Archiwum -> Przywróć.
-6. Trwałe usuwanie budów pozostaje zablokowane. Nie usuwaj dokumentów Firestore ręcznie.
+Nowość: przy dodawaniu zapotrzebowania najpierw wybierz branżę, a lista pokaże tylko materiały tej branży dla wybranej budowy.
 
-To wersja pilotażowa. Przed pracą na danych poufnych wymagane są testy zabezpieczeń.
+1. Wykonaj eksport danych z TaskPoint.
+2. W istniejącym GitHub TaskPoint zastąp osiem plików strony (index.html, auth.js, workspace.js, styles.css, sw.js, manifest.webmanifest oraz dwie ikony PNG).
+3. Kliknij Commit changes i odśwież stronę.
+4. Zamówienia → + Nowe zapotrzebowanie → wybierz budowę → Elektryczna i sprawdź filtr.
+
+Nie zmieniaj Firebase. Nie wgrywaj ponownie Excela.

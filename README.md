@@ -1,3 +1,28 @@
+# TaskPoint BETA 0.9.6 — wybór materiałów po branży
+
+**Nowość:** w **Zamówienia → + Nowe zapotrzebowanie** wybierz budowę i **branżę dla danej pozycji**. Lista **Materiał z przedmiaru** zawiera wyłącznie materiały przypisane do tej branży w wybranej budowie.
+
+- Branża **Elektryczna** → tylko elektryczne, **Sanitarna** → tylko sanitarne, **Budowlana** → tylko budowlane.
+- Zmiana branży resetuje wcześniejszy wybór materiału, aby uniknąć pomyłek. Po zmianie budowy pozycje formularza są rozpoczynane od nowa.
+- Każda pozycja może mieć inną branżę, dzięki czemu jedno zamówienie może obejmować kilka branż.
+- Opcja **Wpisz ręcznie** pozostaje dostępna, także jeśli lista materiałów danej branży jest pusta. Lista potencjalnych odpowiedników również uwzględnia wskazaną branżę.
+- Przed zapisem aplikacja sprawdza zgodność branży i wskazanego materiału, nie da się przypadkiem zapisać pozycji sanitarnej jako elektrycznej.
+- To filtr formularza; **nie zmienia istniejących zamówień ani statusów**. Nie rozdziela uprawnień kierowników na branże w Firestore — użytkownik mający dostęp do budowy nadal może widzieć pozostałe dane tej budowy.
+
+## Aktualizacja na MacBooku — istniejące repozytorium
+
+1. Wykonaj eksport JSON obecnych danych (Ustawienia i eksport).
+2. Otwórz istniejące repozytorium `Klaudia399/TaskPoint` na GitHubie; nie twórz nowego.
+3. **Add file → Upload files**: wgraj / zastąp osiem plików strony: `index.html`, `auth.js`, `workspace.js`, `styles.css`, `sw.js`, `manifest.webmanifest`, `icon-192.png`, `icon-512.png`. Kliknij **Commit changes**.
+4. Otwórz `https://klaudia399.github.io/TaskPoint/` w oknie incognito (lub odśwież cache przeglądarki), zaloguj się na konto testowe.
+5. Zamówienia → + Nowe zapotrzebowanie → wybierz budowę → Elektryczna. Rozwiń listę materiałów — nie powinno być tam rur sanitarnych czy cementu. Wybierz Sanitarna — powinna pojawić się inna lista. Następnie sprawdź opcję Wpisz ręcznie.
+
+**Firebase:** Nie trzeba zmieniać reguł Firestore ani ponownie importować pliku Excel. Używaj obecnych reguł 0.9.5.
+
+**Uwaga:** wersja pilotażowa. Nie należy traktować filtrowania interfejsu jako technicznego ograniczenia dostępu do danych branżowych. Przed obsługą poufnych danych konieczne jest przetestowanie reguł, ról i obiegu zakupowego.
+
+---
+
 # TaskPoint BETA 0.9.5 — kartoteka i archiwum inwestycji
 
 ## Nowe funkcje
