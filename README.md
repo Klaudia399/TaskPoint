@@ -1,3 +1,30 @@
+# TaskPoint BETA 0.9.5 — kartoteka i archiwum inwestycji
+
+## Nowe funkcje
+
+- **Budowy**: oddzielna tabela z kolumnami **Nazwa skrócona**, **Pełna nazwa zadania**, **Zamawiający / inwestor**, **Firmy realizujące**, **Planowany termin zakończenia**, **Status i procent zatowarowania**.
+- **Nowa budowa / Edytuj dane**: administrator może zmieniać nazwę, zamawiającego, pełną nazwę zadania, adres, krótki opis zakresu, listę firm wykonujących oraz planowany termin końca. Dane są zapisywane w istniejącym dokumencie Firestore — zamówienia, materiały i historia pozostają powiązane po stałym ID budowy.
+- **Archiwum**: administrator może przenieść inwestycję z podaniem powodu (data i użytkownik zapisywane na serwerze Firebase). Widoki: **Aktywne / Archiwum / Wszystkie**. Można przywrócić do aktywnych. Stare budowy bez nowych pól pozostają aktywne; uzupełnij ich kartoteki przez Edytuj dane.
+- Archiwalne budowy nie są liczone do aktywnych na pulpicie; zachowują materiały i historię. Nowe zamówienia, zmiany, transporty, przyjęcia i import do archiwalnych inwestycji są blokowane w formularzu i regułach Firestore. Zapis komentarzy i przeglądanie historii pozostają dostępne w ramach istniejących ról.
+- **Trwałe usuwanie budów nie zostało udostępnione**. Firestore zachowuje podkolekcje nawet po usunięciu dokumentu budowy, dlatego zwykły przycisk usuń byłby niebezpieczny bez osobnego mechanizmu pełnego usuwania.
+
+## Instalacja (MacBook, istniejący GitHub + Firebase)
+
+1. W TaskPoint 0.9.4 zrób eksport JSON przez **Ustawienia i eksport**. Zachowaj kopię także poza komputerem, w bezpiecznym miejscu. Eksport nie zastępuje automatycznej kopii zapasowej bazy Firebase.
+2. **Firebase Console → Firestore Database → Rules**: wklej pełną zawartość **FIRESTORE-RULES-0.9.5.txt** i kliknij **Publish**. Nowe funkcje wymagają tych reguł; nie wystarczy sam GitHub.
+3. Do istniejącego repozytorium GitHub `Klaudia399/TaskPoint` wgraj / zastąp osiem plików strony: `index.html`, `auth.js`, `workspace.js`, `styles.css`, `sw.js`, `manifest.webmanifest`, `icon-192.png`, `icon-512.png`; kliknij **Commit changes**. Nie wgrywaj reguł Firebase do publicznej strony.
+4. Otwórz `https://klaudia399.github.io/TaskPoint/` w oknie incognito. W **Budowy** sprawdź tabelę, edycję jednej istniejącej inwestycji, następnie archiwizację i przywrócenie **budowy testowej**.
+5. Zaloguj się jako kierownik i zaopatrzenie, sprawdź, czy zakres informacji oraz historyczne zamówienia są dostępne prawidłowo.
+
+## Ważne
+
+- Ta aktualizacja jest pilotażowa i przetestowana statycznie. Zanim użyjesz rzeczywistych danych, sprawdź uprawnienia, reguły Firestore na osobnych kontach, synchronizację i tworzenie/odtwarzanie archiwum.
+- **Zamawiający** w kartotece inwestycji oznacza podmiot zamawiający wykonanie zadania (np. gmina), a nie kierownika zgłaszającego zakup. Pole `createdBy` w zamówieniu nadal wskazuje autora zapotrzebowania.
+- Archiwizacja nie usuwa ani nie anonimizuje dokumentów. Kierownicy, którzy mają przypisanie do archiwalnej budowy, nadal mają dostęp do jej historii. Dla zamkniętej inwestycji możesz ręcznie zmienić przypisania, jeśli potrzebujesz odebrać dostęp.
+- Dawny skrypt alertów e-mail w Google Apps Script pozostaje bez zmian. Nie trzeba go reinstalować.
+
+---
+
 # TaskPoint BETA 0.9.4 — realizacja branżowa
 
 **Nowa funkcja:** pulpit i zakładka **Budowy** pokazują **zatowarowanie osobno dla branży Sanitarnej, Budowlanej i Elektrycznej** przy każdej inwestycji. Po kliknięciu branży przejdziesz do jej listy materiałowej z automatycznie ustawionym filtrem budowy i branży.

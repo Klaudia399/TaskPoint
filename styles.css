@@ -82,3 +82,18 @@ body.authenticated .auth-screen{display:none!important}
 .tp-branch-compact .tp-branch-hint {font-size:11px}
 .tp-branch-compact .tp-branch-open {margin-top:4px}
 @media(max-width:800px){.tp-branch-grid {grid-template-columns:1fr}.tp-branch-card {padding:12px}.tp-branch-compact {grid-template-columns:1fr}}
+
+/* TaskPoint BETA 0.9.5 - kartoteka inwestycji i archiwum */
+.tp-projects-scroll { overflow-x:auto; max-width:100%; margin:16px 0; }
+.tp-projects-table { min-width:1080px; }
+.tp-projects-table th { white-space:nowrap; }
+.tp-projects-table td { vertical-align:top; min-width:125px; }
+.tp-projects-table td:nth-child(2) { min-width:235px; max-width:320px; white-space:normal; }
+.tp-projects-table td:nth-child(3) { min-width:175px; }
+.tp-projects-table td:last-child { min-width:130px; }
+.tp-projects-table .btn { margin:3px; }
+.tp-projects-detail .item-sub { line-height:1.8; white-space:normal; }
+.tp-project-note { margin:10px 0; white-space:pre-wrap; max-width:72ch; }
+.tp-projects-detail .item-card { overflow-wrap:anywhere; }
+#project-archive-filter { max-width:200px; }
+@media(max-width:700px) { .tp-projects-scroll { margin-inline:0; } .tp-projects-table { min-width:1050px; } }
